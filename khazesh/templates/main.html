@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Search Box Example</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      .search-container {
+        background-color: #4caf50;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        background-color: #f2f2f2;
+        /* padding: 20px; */
+      }
+
+      .search-container::after {
+        content: "";
+        display: table;
+        clear: both;
+      }
+
+      .search-box {
+        /* margin-bottom: 10px; */
+        background-color: #4caf50;
+        padding: 2rem;
+        width: 100%;
+        float: right;
+        flex: auto;
+        /* width: 70%; */
+      }
+
+      .search-box input[type="text"] {
+        width: 90%;
+        justify-content: center;
+        padding: 1.1rem;
+        font-size: 16px;
+        border: none;
+        border-radius: 4px;
+      }
+
+      .search-box input[type="submit"] {
+        background-color: #4c8a4e;
+        color: white;
+        padding: 0;
+        border: 1px;
+        cursor: pointer;
+        border-radius: 4px;
+      }
+
+      .search-criteria {
+        /* padding-top: 10px; */
+        background-color: #4caf50;
+        float: right;
+        width: 20%;
+      }
+
+      .search-criteria select {
+        background-color: white;
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+        border: black 1px solid;
+        border-radius: 4px;
+      }
+      .search-criteria select option {
+        color: black;
+      }
+
+      .search-criteria select:hover {
+        border: rgb(3, 0, 0) 2px solid;
+        /* background-color: rgb(245, 241, 11); */
+        color: red;
+      }
+      
+      
+      .grid-item {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 10px;
+            float: left;
+            width: calc(33.33% - 20px); /* Adjust the width as needed */
+            box-sizing: border-box;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  </head>
+  <body>
+    <div class="search-container">
+      <div class="search-box">
+        <input
+          type="text"
+          id="search-input"
+          placeholder="Type model of mobile"
+          onkeyup="sendRequest()"
+        />
+        <!-- <input type="submit" value="Search" onclick="sendRequest()"> -->
+      </div>
+
+      <div class="search-criteria">
+        <select id="search-criteria-select">
+          <div id="colorInput">
+          <option value="مشکی">مشکی</option>
+          <option value="قرمز">قرمز</option>
+          <option value="آبی">آبی</option>
+          <option value="صورتی">صورتی</option>
+        </select>
+        </div>
+      </div>
+      <div class="search-criteria">
+        <div id="brandInput">
+        <select id="search-criteria-select">
+          <option value="ram">samsung</option>
+          <option value="memory">nokia</option>
+          <option value="site">Site</option>
+          <option value="color">Color</option>
+        </select>
+      </div>
+    </div>
+      <div class="search-criteria">
+        <select id="search-criteria-select">
+          <div id="ramInput">
+
+          <option value="ram">4GB</option>
+          <option value="memory">Memory</option>
+          <option value="site">Site</option>
+          <option value="color">Color</option>
+        </select>
+        </div>
+      </div>
+      <div class="search-criteria">
+        <select id="search-criteria-select">
+          <div id="memoryInput">
+
+          <option value="ram">32GB</option>
+          <option value="memory">Memory</option>
+          <option value="site">Site</option>
+          <option value="color">Color</option>
+        </select>
+      </div>
+      </div>
+      <div class="search-criteria">
+        <select id="search-criteria-select">
+          <div id="siteInput">
+
+          <option value="ram">DigiKala</option>
+          <option value="memory">Memory</option>
+          <option value="site">Site</option>
+          <option value="color">Color</option>
+        </select>
+      </div>
+      </div>
+    </div>
+
+    <div class="grid-container">
+      {% for object in object_list %}
+          <div class="grid-item">
+              <h2>{{ object.name }}</h2>
+              <p>{{ object.description }}</p>
+              <p>Price: ${{ object.price }}</p>
+              <!-- Add more object properties as needed -->
+          </div>
+      {% endfor %}
+
+  </div>
+    <script>
+      function sendRequest() {
+        $(document).ready(function () {
+          $("#search-input").click(function () {
+            // Get search parameters from user input or other elements
+            var model = $("#modelInput").val();
+            var brand = $("#brandInput").val();
+            var ram = $("#ramInput").val();
+            var memory = $("#memoryInput").val();
+            var color = $("#colorInput").val();
+
+            var url =
+              "http://127.0.0.1:8000/search/?model=" +
+              model +
+              "&brand=" +
+              brand +
+              "&ram=" +
+              ram +
+              "&memory=" +
+              memory +
+              "&color=" +
+              color;
+
+            // Make an AJAX request to the Django backend
+            $.ajax({
+              url: url,
+              method: "GET",
+              data: {
+                model: model,
+                brand: brand,
+                ram: ram,
+                memory: memory,
+                color: color,
+              },
+              success: function (response) {
+                // Handle the response from Django
+                console.log(response);
+                // Update your frontend with the received data
+              },
+              error: function (xhr, status, error) {
+                // Handle any errors
+                console.error(xhr.responseText);
+              },
+            });
+          });
+        });
+        console.log()
+      }
+    </script>
+  </body>
+</html>
