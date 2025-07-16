@@ -1,0 +1,912 @@
+{% load static %}
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <link rel="shortcut icon" href="{% static 'images/site-badge.png' %}" type="image/png">
+    <!-- <link
+      href="https://fonts.googleapis.com/css?family=Roboto:400,700"
+      rel="stylesheet"
+    /> -->
+    <!-- <link rel="stylesheet" href="{% static 'css/main.css' %}?v={{ STATIC_VERSION }}" /> -->
+    <link rel="stylesheet" href="{% static 'css/main.css' %}?v=3" />
+  </head>
+  <!-- <script src='{% static "/js/main.js" %}'></script> -->
+  <script src={% static "/js/code.jquery.com_jquery-3.6.0.min.js" %}></script>
+  
+  <body>
+    <style>
+  .green-text { color: green; }
+</style>
+
+
+  <div class="email-container">
+      <a class="email-button" href="/">جستجوی معمولی</a>
+  </div>
+
+    <h1 style="color:#e45c27"><a style="color: #e45c27;"href="https://bartardigital.com/" target="_blank">برتر دیجیتال</a></h1>
+
+    <div class="s008">
+      <form>
+        <div class="inner-form">
+          <div class="basic-search">
+            <div class="input-field">
+              <input
+                id="search"
+                type="text"
+                placeholder="مدل گوشی را وارد کنید"
+                autocomplete="off"
+              />
+              <div class="icon-wrap">
+                <svg
+                  version="1.1"
+                  xmlns="http://www.w3.org/2000/svg"
+                  xmlns:xlink="http://www.w3.org/1999/xlink"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    d="M18.869 19.162l-5.943-6.484c1.339-1.401 2.075-3.233 2.075-5.178 0-2.003-0.78-3.887-2.197-5.303s-3.3-2.197-5.303-2.197-3.887 0.78-5.303 2.197-2.197 3.3-2.197 5.303 0.78 3.887 2.197 5.303 3.3 2.197 5.303 2.197c1.726 0 3.362-0.579 4.688-1.645l5.943 6.483c0.099 0.108 0.233 0.162 0.369 0.162 0.121 0 0.242-0.043 0.338-0.131 0.204-0.187 0.217-0.503 0.031-0.706zM1 7.5c0-3.584 2.916-6.5 6.5-6.5s6.5 2.916 6.5 6.5-2.916 6.5-6.5 6.5-6.5-2.916-6.5-6.5z"
+                  ></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div class="advance-search">
+            <span class="desc">جستجوی پیشرفته</span>
+            <div class="row">
+              <div class="input-field">
+                <div class="input-select">
+                  <select
+                    id="siteInput"
+                    data-trigger=""
+                    name="choices-single-defaul"
+                    onChange="sendRequest_select()"
+                  >
+                    <option placeholder= "" value="">سایت</option>
+                    <!-- <option value="all">All</option> -->
+                    <option value="Tellstar">تل استار</option>
+                    <option value="Mobomin">موبومین</option>
+                    <option value="Taavrizh">تاوریژ</option>
+                    <option value="Hamrahtel">همراه تل</option>
+                    <option value="Kasrapars"> کسری پارس</option>
+                    <option value="Mobile140">موبایل ۱۴۰</option>
+                    <option value="DigiKala">دیجی کالا</option>
+                    <option value="Tecnolife">تکنو لایف</option>
+                    <option value="Saymandigital">سایمان دیجیتال</option>
+                  </select>
+                </div>
+              </div>
+              <div class="input-field">
+                <div class="input-select">
+                  <select
+                    id="brandInput"
+                    data-trigger=""
+                    name="choices-single-defaul"
+                    onChange="sendRequest_select()"
+
+                  >
+                    <option placeholder="" value="">برند</option>
+                    <!-- <option value="all">All</option> -->
+                    <option style="color:green;" value="apple">اپل</option>
+                    <option value="xiaomi">شیايومی</option>
+                    <option value="samsung">سامسونگ</option>
+                    <option value="nokia">نوکیا</option>
+                    <option value="huawei">عواوی</option>
+                    <option value="honor">هونور</option>
+                    <option value="motorola">موتورولا</option>
+                    <option value="realme">ریلمی</option>
+                    <option value="nothing">ناتینگ</option>
+
+                  </select>
+                </div>
+              </div>
+              <div id="siteInput" class="input-field">
+                <div class="input-select">
+                  <select
+                    id="notActiveInput"
+                    data-trigger=""
+                    name="choices-single-defaul"
+                    onChange="sendRequest_select()"
+                  >
+                    <option placeholder="" value="">اکتیو</option>
+                    <!-- <option value="all">All</option> -->
+                    <option value="False">✅ : اکتیو</option>
+                    <option value="True">❌ :‌ اکتیو</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="row second">
+              <div class="input-field">
+                <div class="input-select">
+                  <select
+                    id="vietnamInput"
+                    data-trigger=""
+                    name="choices-single-defaul"
+                    onChange="sendRequest_select()"
+                    
+                  >
+                    <option placeholder="" value="">ویتنام</option>
+                    <!-- <option value="all">All</option> -->
+                    <option value="True">✅ : ویتنام</option>
+                    <option value="False">❌ :‌ ویتنام</option>
+                  </select>
+                </div>
+              </div>
+              <div class="input-field">
+                <div class="input-select">
+                  <select
+                    id="ramInput"
+                    data-trigger=""
+                    name="choices-single-defaul"
+                    onChange="sendRequest_select()"
+
+                  >
+                    <option placeholder="" value="">رم</option>
+                    <option value="2GB">2GB</option>
+                    <option value="3GB">3GB</option>
+                    <option value="4GB">4GB</option>
+                    <option value="6GB">6GB</option>
+                    <option value="8GB">8GB</option>
+                    <option value="12GB">12GB</option>
+                    <option value="16GB">16GB</option>
+                    <option value="24GB">24GB</option>
+                  </select>
+                </div>
+              </div>
+              <div class="input-field">
+                <div class="input-select">
+                  <select
+                    id="memoryInput"
+                    data-trigger=""
+                    name="choices-single-defaul"
+                    onChange="sendRequest_select()"
+
+                  >
+                    <option placeholder="" value="">حافظه</option>
+                    <option value="16">16GB</option>
+                    <option value="32">32GB</option>
+                    <option value="64">64GB</option>
+                    <option value="128">128GB</option>
+                    <option value="256">256GB</option>
+                    <option value="512">512GB</option>
+                    <option value="1TB">1TB</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="row third">
+              <div class="input-field">
+                <div class="result-count">
+                  <span id="result">0</span>نتیجه جستجو
+                </div>
+                <div class="group-btn">
+                  <!-- <button class="btn-delete" id="delete">Reset</button>
+                  <button class="btn-search">Search</button> -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+      
+<style>
+        {% comment %} .element {
+          position: relative;
+          padding: 8px;
+          margin-bottom: 8px;
+          font-size:13px
+        } {% endcomment %}
+ 
+
+        .element {
+          position: relative;
+          display: grid;
+          grid-template-columns: 1rem 1fr;
+          grid-template-rows: auto auto;
+          align-items: center;
+
+          padding: 1rem 2rem;
+        }
+        
+        .btn-delete {
+          position: absolute;
+          top: 0.2rem;
+          right: 0.2rem;
+          height: 1rem;
+          width: 1rem;
+          aspect-ratio: 1;
+          border-radius: 50%;
+          border: none;
+          background-color: #fa5252;
+          color:#e03131;
+          font-size: 0.9rem;
+          font-weight: bold;
+          cursor: pointer;
+          transition: all 0.3s;
+        }
+        
+        .btn-delete:hover {
+          background-color: var(--color-red-dark);
+        }
+        .custom-input {
+          width: 100%;          
+          padding: 10px;
+          border: 1px solid #ccc;
+          border-radius: 5px;
+          font-size: 16px;
+          color: #333;
+          outline: none;
+        }
+        
+        .custom-btn {
+          width: 100%;
+          height:100%;
+          
+          padding: 10px;
+          border: 1px solid #ccc;
+          border-radius: 5px;
+          font-size: 16px;
+          color: black;
+          background-color:#bbf992;;
+          outline: none;
+          cursor:pointer;
+        }
+        
+        .gray::placeholder {
+          color:#ccc
+        }
+        .green::placeholder {
+          color: rgb(0,255, 0)
+        }
+        .red::placeholder {
+          color: #e03131;
+        }
+
+</style>
+    </div>
+    <table style="direction:rtl" class="container">
+      <thead>
+        <tr>
+          <th><h1></h1></th>
+          <th><h1>برند</h1></th>
+          <th><h1>مدل</h1></th>
+          <th><h1>حافظه/رم</h1></th>
+          <th><h1>قیمت</h1></th>
+          <th><h1>اختلاف قیمت</h1></th>
+          <th><h1>سایت</h1></th>
+          <th><h1>فروشنده</h1></th>
+          <th><h1>رنگ</h1></th>
+          <th><h1>ویتنام</h1></th>
+          <th><h1>اکتیو</h1></th>
+          <th><h1>ID</h1></th>
+          <th><h1>@</h1></th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    
+    <script src='{% static "/js/extention/choices.js" %}'></script>
+    <script>
+
+    'use strict';
+      const customSelects = document.querySelectorAll("select");
+      const deleteBtn = document.getElementById("delete");
+      const choices = new Choices("select", {
+        searchEnabled: false,
+        removeItemButton: true,
+        itemSelectText: "",
+      });
+
+      for (let i = 0; i < customSelects.length; i++) {
+        customSelects[i].addEventListener(
+          "addItem",
+          function (event) {
+            if (event.detail.value) {
+              let parent = this.parentNode.parentNode;
+              parent.classList.add("valid");
+              parent.classList.remove("invalid");
+            } else {
+              let parent = this.parentNode.parentNode;
+              parent.classList.add("invalid");
+              parent.classList.remove("valid");
+            }
+          },
+          false
+        );
+      }
+
+
+      const create_td = function(i, obj, option){
+
+      const date = new Date(obj.updated_at);
+      const  now = new Date()
+      const timeDiff = (now - date) / (1000  * 60 ) 
+
+      const fourHourInMiniute = (60 * 4) + 1
+      
+        // localize price_change_time
+        const price_change_time = obj.price_change_time;
+        const custom_id = obj.custom_id || ""
+        let ChangeDate = null;
+        let localChangeTime = null;
+        if (Boolean(price_change_time)){
+          ChangeDate = new Date(price_change_time);
+          localChangeTime = new Intl.DateTimeFormat("fa", option).format(
+            ChangeDate
+                )};
+
+                const localTime = new Intl.DateTimeFormat("fa", option).format(
+                  date
+                );
+           
+                const min_price = obj.min_price / 10;
+                const old_min_price = obj.old_min_price;
+                let price_diff = "-";
+                if (old_min_price) {
+                  price_diff = min_price - old_min_price / 10;
+                  //  price_diff = price_diff / 10;
+                  //console.log('price_diff', price_diff)
+                  //console.log('min_price', min_price)
+                  //console.log('old_min_price', old_min_price)
+                  //console.log("##############################################################")
+                }
+                
+                let toLocalNumber = "0";
+                if (price_diff != "-") {
+                  const option = {
+                    style: "currency",
+                    // currency:
+                  };
+                  toLocalNumber = new Intl.NumberFormat("SY").format(
+                    Math.abs(price_diff)
+                  );
+                }
+                const toLocalMinPrice = new Intl.NumberFormat("SY").format(min_price);
+                const html = `<tr id=${obj.id} class=${timeDiff > fourHourInMiniute? "dont_Exist" : ""}>
+            <td id="td-counter" data-id=${obj.id}>${i + 1}</td>
+            <td  >${obj.brand__name}</td>
+            <td class="price_diff" id="model-title" data-title="${obj.title}" style="font-size:12px;"><a href=${obj.url} target="_blank"> <div style="height:100%;width:100%;">${obj.model}<span >${obj.title}</span></div></a></td>
+            <td id="memory-ram" data-memory="${obj.memory}" data-ram="${obj.ram}" style="font-size:14px;">${obj.memory}/${obj.ram}</td>
+            <td class="price_diff" style="font-size">${toLocalMinPrice + " ت"}
+             <span>تاریخ بروزرسانی ${localTime}</span></td>
+            <td  class="price_diff"  style="color:${price_diff > 0 ? "green" : "red"};">${
+                  price_diff ?  toLocalNumber+  " ت": price_diff
+                }<span>${localChangeTime ? ` آخرین تغییر قمیت در ${localChangeTime} بوده`: 'تغییر قیمت نداشته.'} </span></td>
+            <td id="site" data-site="${obj.site}" style="font-size:14px; padding:0;">${obj.site}</td>
+            <td id="seller-guarantee" data-seller="${obj.seller}" data-guarantee="${obj.guarantee}" class="price_diff" style="font-size:14px;">${obj.seller}<span >${obj.guarantee || 'گارانتی ذخیره نشده'}</span></td>
+            <td  ><div id="color-name" data-color-name="${obj.color_name}" style="width: 50%;
+    float: right;font-size:13px;">${
+      obj.color_name
+    }</div>
+    <div id="color-hex" data-color-name="${obj.color_hex}" style="background:${obj.color_hex};
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    margin-top: 4px;
+    margin-left: 9%;
+    float: left;"></div>
+   </td>
+            <td >${obj.vietnam ? "✅" : "❌"}</td>
+            <td >${obj.not_active ?  "❌" : "✅" }</td>
+            <!-- <td >${localTime}</td> -->
+            <td  style="max-width:60px;">
+             
+                <input onfocus="onFocusFunc(this)" onfocusout="register_id(this, '${custom_id}')" class="custom-input gray" value="${custom_id}" placeholder="ثبت آیدی"/>
+               
+            </td>
+
+  <td  style="max-width:60px; padding:0; "> <button data-ram=${obj.ram}
+                                            data-memory=${obj.memory}
+                                            data-vietnam=${obj.vietnam}
+                                            data-not-active=${obj.not_active}
+                                            data-model="${obj.model}"
+                                            data-brand=${obj.brand__name}
+                                            data-id=${obj.id}
+                                    
+                                            class="custom-btn"
+                                            onClick="get_similar_mobiles(this)"
+                                            >مشابه ها  </button></td>
+          </tr>`;
+
+          return html
+      }
+      
+      let currentRequest = null;
+      const debounce = (callback, wait) => {
+          let timeoutId = null;
+          return (...args) => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+              //callback.apply(this, args);
+              callback(...args);
+            }, wait);
+          };
+        }
+
+
+      function sendRequest() {
+        // Get search parameters from user input or other elements
+        // setTimeout(getLocationFromDb, 1000);
+        // var $lock = $(this);
+
+        if (currentRequest){
+          currentRequest.abort()
+        }
+        var model = $("#search").val();
+        var brand = $("#brandInput").val();
+        var ram = $("#ramInput").val();
+        var memory = $("#memoryInput").val();
+        var notActive = $("#notActiveInput").val();
+        var site = $("#siteInput").val();
+        var vietnam = $("#vietnamInput").val();
+
+        var url =
+          // "/set_auto_custom_id/?model=" +
+          "/set_auto_custom_id/?model=" +
+          model +
+          "&brand=" +
+          brand +
+          "&ram=" +
+          ram +
+          "&memory=" +
+          memory +
+          "&not_active=" +
+          notActive +
+          "&site=" +
+          site +
+          "&vietnam=" +
+          vietnam;
+
+        // Make an AJAX request to the Django backend
+        if (model ||  brand || ram || memory || notActive || site || vietnam )  {
+          currentRequest =  $.ajax({
+            url: url,
+            method: "GET",
+            data: {
+              model: model,
+              brand: brand,
+              ram: ram,
+              memory: memory,
+              notActive: notActive,
+              site: site,
+              vietnam: vietnam,
+            },
+            success: function (response) {
+              // Handle the response from Django
+              console.log(model, memory, ram, brand, site, vietnam);
+              // console.log(response);
+              console.log(response);
+
+
+              const option = {
+                hour: "numeric",
+                minute: "numeric",
+                day: "numeric",
+                month: "numeric",
+                year: "numeric",
+              };
+              $("tbody").children().remove();
+
+              for (const [i, obj] of response.entries()) {
+
+                const html = create_td(i, obj, option)
+
+                $("tbody").append(html);
+              }
+
+              let count = $("tbody").children().length;
+
+              console.log(count);
+              document.querySelector("#result").innerHTML = count;
+              count = 0;
+
+              // Update your frontend with the received data
+            },
+            error: function (xhr, status, error) {
+              if(status !== 'abrot'){
+                
+                // Handle any errors
+                console.error(xhr.responseText);
+              }
+            },
+          });
+        } else {
+          $("tbody").children().remove();
+          count = 0;
+          document.querySelector("#result").innerHTML = count;
+        }
+        console.log();
+      }
+
+      const handleSearchRequest = debounce(sendRequest, 600)
+      $("#search").on('keyup', handleSearchRequest)
+
+      function sendRequest_select() {
+        // Get search parameters from user input or other elements
+        // setTimeout(getLocationFromDb, 1000);
+        // var $lock = $(this);
+        var model = $("#search").val();
+        var brand = $("#brandInput").val();
+        var ram = $("#ramInput").val();
+        var memory = $("#memoryInput").val();
+        var notActive = $("#notActiveInput").val();
+        var site = $("#siteInput").val();
+        var vietnam = $("#vietnamInput").val();
+
+        var url =
+          // "https://dalgaweb.ir/set_auto_custom_id/?model=" +
+          "/set_auto_custom_id/?model=" +
+          model +
+          "&brand=" +
+          brand +
+          "&ram=" +
+          ram +
+          "&memory=" +
+          memory +
+          "&not_active=" +
+          notActive +
+          "&site=" +
+          site +
+          "&vietnam=" +
+          vietnam;
+
+        // Make an AJAX request to the Django backend
+       
+          $.ajax({
+            url: url,
+            method: "GET",
+            data: {
+              model: model,
+              brand: brand,
+              ram: ram,
+              memory: memory,
+              notActive: notActive,
+              site: site,
+              vietnam: vietnam,
+            },
+            success: function (response) {
+              // Handle the response from Django
+              //console.log(model, memory, ram, brand, site, vietnam);
+              // console.log(response);
+              //console.log(response);
+
+              // const removeElemnt = function (tagName) {
+              //   var element = document.getElementsByTagName(tagName),
+              //     index;
+
+              //   for (index = element.length - 1; index >= 0; index--) {
+              //     element[index].parentNode.removeChild(element[index]);
+              //   }
+              // };
+
+              // removeElemnt("tbody");
+              const option = {
+                hour: "numeric",
+                minute: "numeric",
+                day: "numeric",
+                month: "numeric",
+                year: "numeric",
+              };
+              $("tbody").children().remove();
+
+              // if ($("#search").val() == "") {
+              //   $("tbody").children().remove();
+              // }
+
+              for (const [i, obj] of response.entries()) {
+               
+                const html = create_td(i, obj, option)
+
+                $("tbody").append(html);
+              }
+
+              let count = $("tbody").children().length;
+
+              console.log(count);
+              document.querySelector("#result").innerHTML = count;
+              count = 0;
+
+              // Update your frontend with the received data
+            },
+            error: function (xhr, status, error) {
+              // Handle any errors
+              console.error(xhr.responseText);
+            },
+          });
+       
+        console.log();
+      }
+      
+    // async function fetchForSetCustomId(title, memory, ram, color_name, site, seller, guarantee,customId, input) {
+      async function fetchForSetCustomId(id,customId, input) {
+        try {
+            input.placeholder = "..."
+
+           // const res = await fetch(`/set_custom_mobile_id/?title=${title}&memory=${memory}&ram=${ram}&color_name=${color_name}&site=${site}&seller=${seller}&guarantee=${guarantee}
+            //&custom_id=${customId}`, {
+          //      method: "GET"
+           // });
+           const res = await fetch(`/set_custom_mobile_id/?id=${id}&custom_id=${customId}`, {
+                method: "GET"
+            });
+    
+            if (!res.ok) {
+                console.log(res)
+                throw new Error("مشکل کانکشن");
+            }
+    
+            const data = await res.json();
+    
+            if (data.Response === "Faild") {
+                throw new Error(data.reason);
+            }
+            
+            if(data.Response === "success") {
+              input.value = customId
+              input.placeholder = ""
+              input.style.borderWidth = "2px"
+              input.style.borderColor= "rgb(0,150,0)"
+              input.classList.remove('gray')
+              input.classList.remove('red')
+              input.classList.add("green")
+              input.style.color = "rgb(0,150,0)"
+              
+              return 1
+
+            }
+            //console.log(data);
+        } catch (error) {
+            showInputError(input, error.message) 
+        }
+    }
+    function showInputError(element, errorMessage){
+      element.value = ""
+      element.placeholder = errorMessage;
+      element.classList.remove('gray')
+      element.classList.remove('green')
+      element.classList.add("red")
+      element.style.borderColor = "red"  
+      element.style.borderWidth = "2px"
+    }
+
+    function containsOnlyDigits(str) {
+      return /^\d+$/.test(str);
+  }
+    async function register_id(input, custom_id) {
+        let coustomID = custom_id
+        const inputValue = toEnglishDigits(input.value)
+        console.log(inputValue, custom_id,  !containsOnlyDigits(inputValue), inputValue === custom_id)
+
+        //if (inputValue === coustomID) return
+
+        if (!containsOnlyDigits(inputValue) && inputValue) {
+          showInputError(input, "فقط عدد")
+
+          return 
+        }
+
+        const parentTR = input.closest('tr');
+    
+        const titleElement = parentTR.querySelector('#model-title');
+        const memoryElement = parentTR.querySelector('#memory-ram');
+        const ramElement = parentTR.querySelector('#memory-ram');
+        const colorElement = parentTR.querySelector('#color-name');
+        const siteElement = parentTR.querySelector('#site')
+        const sellerGuaranteeElement = parentTR.querySelector('#seller-guarantee')
+        const modelId = parentTR.querySelector('#td-counter').dataset.id
+    
+        if (titleElement && memoryElement && ramElement && colorElement) {
+          /*  const title =  encodeURIComponent(titleElement.dataset.title.trim())
+            const memory = memoryElement.dataset.memory;
+            const ram = ramElement.dataset.ram;
+            const color_name = colorElement.dataset.colorName;
+            const site = siteElement.dataset.site
+            const seller = encodeURIComponent(sellerGuaranteeElement.dataset.seller.trim())
+            const guarantee = encodeURIComponent(sellerGuaranteeElement.dataset.guarantee.trim())*/
+            
+            //const isSuccess = await fetchForSetCustomId(title, memory, ram, color_name, site, seller, guarantee, inputValue ,input);
+          const isSuccess = await fetchForSetCustomId(modelId, inputValue ,input);
+          if (isSuccess) customId = inputValue;
+            
+        } else {
+            showInputError(input, "اطلاعات مورد نیاز موجود نیست!")
+        }
+    }
+
+    function onFocusFunc(input){
+      input.innerHTML = "ثبت آيدی"
+      input.classList.remove('green')
+      input.classList.remove('red')
+      input.classList.add('gray')
+      input.style.borderColor= "rgb(0,0,0)"
+      input.style.borderWidth = "1px"
+      input.style.color= "rgb(0,0,0)"
+    }
+
+    function toEnglishDigits(str) {
+      // convert persian digits [۰۱۲۳۴۵۶۷۸۹]
+      var e = "۰".charCodeAt(0);
+      str = str.replace(/[۰-۹]/g, function (t) {
+        return t.charCodeAt(0) - e;
+      });
+
+      // convert arabic indic digits [٠١٢٣٤٥٦٧٨٩]
+      e = "٠".charCodeAt(0);
+      str = str.replace(/[٠-٩]/g, function (t) {
+        return t.charCodeAt(0) - e;
+      });
+      return str;
+    }
+    function createSubTableRow(data, similar_mobile_id, index) {
+      const toLocalMinPrice = new Intl.NumberFormat("SY").format(data.min_price);
+      return `
+      <tr>
+            <td  >${index}</td>
+            <td  >${data.brand__name}</td>
+            <td class="price_diff" style="font-size:12px;"><a href=${data.url} target="_blank"> <div style="height:100%;width:100%;">${data.model}<span >${data.title}</span></div></a></td>
+            <td style="font-size:14px;">${data.memory}/${data.ram}</td>
+            <td class="price_diff" style="font-size">${toLocalMinPrice + " ت"}
+            <td style="font-size:14px; padding:0;">${data.site}</td>
+            <td style="font-size:14px;">${data.seller}</td>
+            <td  ><div style="width: 50%;
+            float: right;font-size:13px;">${
+              data.color_name
+            }</div>
+            <div style="background:${data.color_hex};
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-top: 4px;
+            margin-left: 9%;
+            float: left;"></div>
+          </td>
+            <td >${data.vietnam ? "✅" : "❌"}</td>
+            <td >${data.not_active ?  "❌" : "✅" }</td>
+            <td> 
+                <button 
+                    style="width:100%; 
+                    height:100%;
+                    color:inherit;
+                    background-color:inherit;
+                    cursor:pointer;"
+                    onClick="set_similar_custom_id(this)" data-similar-mobile-id=${similar_mobile_id} data-custom-id=${data.custom_id}> ${data.custom_id}
+                </button>
+             </td>
+      </tr>`
+    }
+// Function to handle similar mobiles fetching and subtable creation
+async function get_similar_mobiles(btn) {
+  const { id, ram, memory, model, vietnam, brand, notActive } = btn.dataset;
+  const parentRow = btn.closest('tr');
+
+  // Check if the subtable already exists, and if so, toggle its visibility
+  let subTable = parentRow.nextElementSibling;
+  if (subTable && subTable.classList.contains('subtable-row')) {
+    subTable.classList.toggle('hidden');
+    return;
+  }
+
+  // Show loading message
+  btn.innerHTML = 'در حال انحام...';
+  
+  try {
+    // Fetch data from the server
+    const res = await fetch(`/get_similar_mobiles/?ram=${ram}&memory=${memory}&model=${model}&vietnam=${vietnam === 'true' ? 'True' : 'False'}&brand=${brand}&not_active=${notActive === 'true' ? 'True' : 'False'}&id=${id}`, {
+      method: "GET"
+    });
+
+    if (!res.ok) {
+      throw new Error("Connection issue");
+    }
+
+    const data = await res.json();
+
+    // Create the subtable row only if data is returned
+    if (data.length > 0) {
+      // Create a subtable container row
+      const subTableHtml = `
+
+        <tr class="subtable-row">
+          <td colspan="12">
+            <table class="subtable">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>برند</th>
+                  <th>مدل</th>
+                  <th>حافظه/رم</th>
+                  <th>قیمت</th>
+                  <th>سایت</th>
+                  <th>فروشنده</th>
+                  <th>رنگ</th>
+                  <th>ویتنام</th>
+                  <th> اکتیو</th>
+                  <th>ID</th>
+
+                </tr>
+              </thead>
+              <tbody>
+                ${data.map((item, i) => createSubTableRow(item, id, i + 1)).join('')}
+              </tbody>
+            </table>
+          </td>
+        </tr>`;
+
+      // Insert the subtable right after the clicked row
+      $(parentRow).after(subTableHtml);
+    } else {
+      btn.innerHTML = 'نتیجه ای ندارد';
+    }
+  } catch (error) {
+    console.error(error);
+    btn.innerHTML = 'Error';
+  } finally {
+    // Reset the button text after fetching
+    btn.innerHTML = 'مشابه ها';
+  }
+}
+
+// CSS to style the subtable
+const style = document.createElement('style');
+style.textContent = `
+ 
+    /* Subtable row hover - disable it */
+    .subtable-row:hover, .subtable tr:hover {
+        background-color: transparent !important; /* No hover effect on subtable */
+    }
+    .subtable tr td {
+      color: #d5d1d1 !important;
+    }
+      .subtable tr:hover td {
+        background-color: transparent !important;
+        color: inherit !important;
+        font-weight: normal !important;
+      }
+    /* Style for the subtable */
+    .subtable {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+
+    .subtable th, .subtable td {
+        border: 1px solid #ddd;
+        padding: 8px;
+    }
+
+    /* Background color for the subtable rows */
+    .subtable-row {
+        background-color: #f9f9f9;
+    }
+
+    /* Class to hide subtables */
+    .hidden {
+        display: none;
+    }
+`;
+document.head.appendChild(style);
+
+async function set_similar_custom_id(btn){
+    const similar_tr =btn.closest('tr');
+    const {similarMobileId, customId} = btn.dataset;
+    const similar_mobile_tr = document.getElementById(similarMobileId);
+    const similar_mobile_tr_input = similar_mobile_tr.getElementsByTagName('input')[0];
+    similar_mobile_tr_input.focus();
+    similar_mobile_tr_input.value = customId;
+    console.log(similar_mobile_tr_input)
+
+    const isSuccess = await fetchForSetCustomId(similarMobileId, customId ,similar_mobile_tr_input);
+    if (isSuccess) customId = inputValue;
+      
+
+    
+}
+</script>
+  </body>
+</html>
