@@ -101,9 +101,9 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASES = {
      'default': {
          'ENGINE': 'django.db.backends.mysql',
-         'NAME': 'khazesh',
-         'USER': 'root',
-         'PASSWORD': '',
+         'NAME': 'scraping_db',
+         'USER': 'scraping',
+         'PASSWORD': 'Ww0ygcseN,40!oXz',
          'HOST': 'localhost',
          'PORT': '',
          'OPTIONS': {
@@ -179,8 +179,8 @@ SIMPLE_JWT = {
 
 }
 
-CELERY_BROKER_URL = 'redis://:zorOu6fwQCqKKnqSzB8jB03g@vinson.liara.cloud:30777/0'
-CELERY_RESULT_BACKEND = 'redis://:zorOu6fwQCqKKnqSzB8jB03g@vinson.liara.cloud:30777/0'
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 # CELERY_BROKER_URL = 'redis://localhost:6379/0'
 # CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 CELERY_ACCEPT_CONTENT = ['json']

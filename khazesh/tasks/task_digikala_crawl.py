@@ -10,6 +10,13 @@ from .save_object_to_database import save_obj
 from khazesh.models import Mobile
 from django.utils import timezone
 
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+import time
+
+
+
 def STATICS() -> Optional[Tuple[Dict]]:
     headers = {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
@@ -316,38 +323,30 @@ def get_cookie() -> Optional[dict] :
 
     URL = "https://digikala.com"
     try:
-        import time
-
-        from selenium import webdriver
-        
-        chrome_options = webdriver.ChromeOptions()
-        chrome_options.set_capability('browserless:token', 'seP9QYgrex2JLu96TTW')
+        # تنظیمات مرورگر
+        chrome_options = Options()
         chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--headless")
-
-        # Chrome options
+        chrome_options.add_argument("--headless")  # اختیاری: اگر مرورگر نیاز به نمایش داشته باشه این خط رو کامنت کن
+        chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--disable-notifications")
         chrome_options.add_argument("window-size=2000x1080")
-        chrome_options.add_argument(
-            "--headless"
-        )  # Optional: Comment this if you need a visible browser
-        chrome_options.add_argument(
-            "--disable-gpu"
-        )  # Disable GPU acceleration in headless mode
-        chrome_options.add_experimental_option(
-            "detach", True
-        )  # Keep the browser open after script ends
+        chrome_options.add_experimental_option("detach", True)
 
-        # Start WebDriver
-        driver = webdriver.Remote(
-            command_executor='https://chrome-bartardigital.liara.run/webdriver',
-            options=chrome_options
-        )
+        # مسیر درایور
+        CHROMEDRIVER_PATH = "/usr/local/bin/chromedriver"  # اطمینان حاصل کن که مسیر دقیق هست
+
+        # ساخت آبجکت سرویس و راه‌اندازی WebDriver
+        service = Service(executable_path=CHROMEDRIVER_PATH)
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+        
+
+        # استفاده از درایور
         driver.get(URL)
 
         time.sleep(5)
 
         cookies = driver.get_cookies()
+
         # cookies = {cookie["name"]: cookie["value"] for cookie in cookies}
         # cook = {}
         # for cookie in cookies:

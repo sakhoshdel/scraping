@@ -10,6 +10,9 @@ from celery import shared_task
 from requests import Response
 import traceback
 from typing import Optional, Tuple, List, Dict
+
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 import time
 
 from khazesh.models import Mobile
@@ -80,27 +83,27 @@ def hamrahtel_crawler(self):
             'آنر': 'honor',
             'هواوی': 'huawei'
         }
-        # Initialize UserAgent and ChromeOptions
-        chrome_options = webdriver.ChromeOptions()
-        chrome_options.set_capability('browserless:token', 'seP9QYgrex2JLu96TTW')
+        # تنظیمات مرورگر
+        chrome_options = Options()
         chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--headless")
-        
-        # Chrome options
-        chrome_options.add_argument('--disable-notifications')
-        chrome_options.add_argument('window-size=2000x1080')
-        chrome_options.add_argument('--headless')  # Optional: Comment this if you need a visible browser
-        chrome_options.add_argument('--disable-gpu')  # Disable GPU acceleration in headless mode
-        chrome_options.add_experimental_option("detach", True)  # Keep the browser open after script ends
-        
-        # Start WebDriver
-        driver = webdriver.Remote(
-            command_executor='https://chrome-bartardigital.liara.run/webdriver',
-            options=chrome_options
-        )
+        chrome_options.add_argument("--headless")  # اختیاری: اگر مرورگر نیاز به نمایش داشته باشه این خط رو کامنت کن
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--disable-notifications")
+        chrome_options.add_argument("window-size=2000x1080")
+        chrome_options.add_experimental_option("detach", True)
+
+        # مسیر درایور
+        CHROMEDRIVER_PATH = "/usr/bin/chromedriver"  # اطمینان حاصل کن که مسیر دقیق هست
+
+        # ساخت آبجکت سرویس و راه‌اندازی WebDriver
+        service = Service(executable_path=CHROMEDRIVER_PATH)
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+
+        # استفاده از درایور
         driver.get(URL)
-        
-        time.sleep(4)
+
+        time.sleep(5)
+
         
         # Scroll down the page until the end  
         last_height = driver.execute_script("return document.body.scrollHeight")  
