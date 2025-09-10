@@ -40,6 +40,7 @@ class Mobile(DateModel):
     custom_id = models.CharField(max_length=20, null=True, blank=True)
     status = models.BooleanField(default=False, verbose_name=_('وضعیت'))
     mobile = models.BooleanField(default=True, verbose_name=_('موبایل یا تبلت'))
+    price_changes_24h = models.JSONField(default=list, blank=True, verbose_name="تغییرات قیمت ۲۴ ساعته")
 
 class ConnectionErrorLog(models.Model):
     url = models.URLField()
@@ -102,6 +103,7 @@ class ProductAccessories(models.Model):
     description = models.CharField(max_length=10000, null=True, blank=True, verbose_name=_('توضیحات تکمیلی'))
     custom_id = models.CharField(max_length=20, null=True, blank=True)
     status = models.BooleanField(default=False, verbose_name=_('وضعیت'))
+    price_changes_24h = models.JSONField(default=list, blank=True, verbose_name="تغییرات قیمت ۲۴ ساعته")
 
     
 

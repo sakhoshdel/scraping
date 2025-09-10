@@ -17,9 +17,13 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from khazesh.serializers import MobileSerilizer
 from fuzzywuzzy import fuzz
 from datetime import timedelta
+from django.utils.dateparse import parse_datetime
 import re
+import json
 from rest_framework.response import Response
 from django.db.models import Min, Max
+from django.utils.dateparse import parse_datetime
+import datetime
 
 
 
@@ -156,137 +160,196 @@ def site_status(request):
 
     # Handle other HTTP methods or errors
     return JsonResponse({'error': 'Invalid request method'}, status=400)
+def clean_boolean(value):
+    """تبدیل ورودی به True/False یا None برای BooleanField"""
+    if str(value).lower() in ["true", "1"]:
+        return True
+    elif str(value).lower() in ["false", "0"]:
+        return False
+    return None
 
 def ajax_search(request):
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        two_days_ago = timezone.now() - timezone.timedelta(days=2, minutes=15)
-        typeMobile = True if request.GET.get('type', '') == 'mobile' else False
-        # Get query parameters from the AJAX request
-        model:str = request.GET.get('model', '').strip()
-        # print(model)
-        brand = request.GET.get('brand', '')
-        # print(brand)
-        ram = request.GET.get('ram', '')
-        # print(ram)
-        memory = request.GET.get('memory', '')
-        # print(memory)
-        # print(not_active)
-        vietnam = request.GET.get('vietnam', '')
-        # print(vietnam)
-        site = request.GET.get('site', '')
-        # print(site)
-        not_active = request.GET.get('not_active', '')
-        if not_active == 'null':
-            not_active = ''
+    if request.headers.get('x-requested-with') != 'XMLHttpRequest':
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
 
-       
-        if model.isdigit():
-            mobiles = Mobile.objects.filter(
-            custom_id__icontains = model,
-            updated_at__gt=two_days_ago,  
+    two_days_ago = timezone.now() - timedelta(days=2, minutes=15)
+    typeMobile = True if request.GET.get('type', '') == 'mobile' else False
+
+    model = request.GET.get('model', '').strip()
+    brand = request.GET.get('brand', '').strip()
+    ram = request.GET.get('ram', '').strip()
+    memory = request.GET.get('memory', '').strip()
+    vietnam = clean_boolean(request.GET.get('vietnam', '').strip())
+    site = request.GET.get('site', '').strip()
+    not_active = clean_boolean(request.GET.get('not_active', '').strip())
+
+    if model.isdigit():
+        mobiles = Mobile.objects.filter(
+            custom_id__icontains=model,
+            updated_at__gt=two_days_ago,
             mobile=typeMobile,
+        ).select_related("brand").values(
+            'id', 'model', 'old_min_price', 'not_active', 'color_name',
+            'seller', 'guarantee', 'ram', 'memory',
+            'vietnam', 'dual_sim', 'max_price',
+            'min_price', 'site', 'updated_at',
+            'url', 'brand__name', 'color_hex',
+            'price_change_time', 'title',
+            "custom_id", "status", "price_changes_24h"
+        ).order_by('min_price')
 
-            ).select_related(brand).values('id', 'model', 'old_min_price', 'not_active', 'color_name',
-                                        'seller', 'guarantee', 'ram', 'memory',
-                                        'vietnam', 'dual_sim', 'max_price',
-                                        'min_price', 'site', 'updated_at', 
-                                        'url', 'brand__name',  'color_hex',
-                                        'price_change_time', 'title',
-                                        "custom_id", "status").order_by('min_price')
-            return JsonResponse(list(mobiles), safe=False)
-        
-        
-        else:
-            fields = [('brand__name', brand), ('ram', ram),
-                    ('memory__icontains', memory), ('not_active', not_active), ('vietnam', vietnam), ('site', site)]
+    else:
+        # ساخت دیکشنری فیلتر با حذف None
+        fields = [
+            ('brand__name', brand),
+            ('ram', ram),
+            ('memory__icontains', memory),
+            ('not_active', not_active),
+            ('vietnam', vietnam),
+            ('site', site)
+        ]
 
-            # crate dynamic fields
-            filter_fildes_list = list(filter(None, list(map(find_not_empty, fields))))
-            filter_fildes_dict = {k: v for d in filter_fildes_list for k, v in d.items()}
-            
-            if model:
-                filter_fildes_dict['model__iregex'] = rf'\b{model}\b'              
-            # filter_filds_dict.update({'model__icontains': model})
-            # print(filter_fildes_dict)
+        filter_fields_dict = {k: v for k, v in fields if v not in [None, ""]}
 
-            mobiles = Mobile.objects.filter(
-                **filter_fildes_dict,
-                updated_at__gt=two_days_ago,  
-                mobile=typeMobile,     
-            ).select_related(brand).values('id', 'model', 'old_min_price', 'not_active', 'color_name',
-                                        'seller', 'guarantee', 'ram', 'memory',
-                                        'vietnam', 'dual_sim', 'max_price',
-                                        'min_price', 'site', 'updated_at', 
-                                        'url', 'brand__name',  'color_hex',
-                                        'price_change_time', 'title',
-                                        "custom_id", "status").order_by('min_price')
-            # print(mobiles)
+        if model:
+            filter_fields_dict['model__iregex'] = rf'\b{model}\b'
 
-            # Return the JSON response with the filtered mobile data
-            return JsonResponse(list(mobiles), safe=False)
+        mobiles = Mobile.objects.filter(
+            **filter_fields_dict,
+            updated_at__gt=two_days_ago,
+            mobile=typeMobile,
+        ).select_related("brand").values(
+            'id', 'model', 'old_min_price', 'not_active', 'color_name',
+            'seller', 'guarantee', 'ram', 'memory',
+            'vietnam', 'dual_sim', 'max_price',
+            'min_price', 'site', 'updated_at',
+            'url', 'brand__name', 'color_hex',
+            'price_change_time', 'title',
+            "custom_id", "status", "price_changes_24h"
+        ).order_by('min_price')
 
-    # Handle other HTTP methods or errors
-    return JsonResponse({'error': 'Invalid request method'}, status=400)
+    # 🔥 محاسبه مجموع تغییر قیمت ۲۴ ساعته
+    now = timezone.now()
+    result = []
 
+    for m in mobiles:
+        total_change = 0
+        valid_changes = []  # فقط تغییرات ۲۴ ساعت اخیر
 
+        for c in m.get("price_changes_24h") or []:
+            time_str = c.get("time")
+            change_value = c.get("change", 0)
+
+            if not time_str:
+                continue
+
+            parsed = parse_datetime(time_str)
+            if not parsed:
+                continue
+
+            # timezone-aware
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=timezone.utc)
+
+            if now - parsed <= timedelta(hours=24):
+                try:
+                    total_change += float(change_value)
+                    valid_changes.append(c)
+                except ValueError:
+                    continue
+
+        # فقط تغییرات اخیر رو برگردون
+        m["price_changes_24h"] = valid_changes
+        m["price_changes_24h_total"] = total_change
+        result.append(m)
+
+    return JsonResponse(result, safe=False)
 
 def accessories_ajax_search(request):
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        two_days_ago = timezone.now() - timezone.timedelta(days=2, minutes=15)
+    if request.headers.get('x-requested-with') != 'XMLHttpRequest':
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
 
-        # Get query parameters from the AJAX request
-        model:str = request.GET.get('model', '').strip()
-        brand = request.GET.get('brand', '')
-        category = request.GET.get('category', '')
-        site = request.GET.get('site', '')
-        
+    two_days_ago = timezone.now() - timedelta(days=2, minutes=15)
 
+    model = request.GET.get('model', '').strip()
+    brand = request.GET.get('brand', '')
+    category = request.GET.get('category', '')
+    site = request.GET.get('site', '')
 
-        if model.isdigit():
-            accessories = ProductAccessories.objects.filter(
-            custom_id__icontains = model,
+    if model.isdigit():
+        accessories = ProductAccessories.objects.filter(
+            custom_id__icontains=model,
             updated_at__gt=two_days_ago,
+        ).values(
+            'id', 'model', 'old_min_price', 'color_name',
+            'seller', 'guarantee', 'max_price',
+            'min_price', 'site', 'updated_at',
+            'url', 'brand__name_fa', 'brand__name_en',
+            'category__name_fa', 'category__name_en',
+            'color_hex', 'price_change_time', 'title',
+            'description', 'fake', 'stock',
+            "custom_id", "status", "price_changes_24h"
+        ).order_by('min_price')
+    else:
+        fields = [
+            ('brand__name_en', brand),
+            ('category__name_en', category),
+            ('site', site),
+        ]
+        filter_fields_dict = {k: v for k, v in fields if v not in [None, ""]}
 
-            ).select_related(brand).values('id', 'model', 'old_min_price', 'color_name',
-                                        'seller', 'guarantee' 'max_price',
-                                        'min_price', 'site', 'updated_at', 
-                                        'url', 'brand__name_fa', 'brand__name_en',
-                                        'category__name_fa', 'category__name_en',
-                                        'color_hex', 'price_change_time', 'title','description', 'fake', 'stock',
-                                        "custom_id", "status").order_by('min_price')
-            return JsonResponse(list(accessories), safe=False)
-        
-        
-        else:
-            fields = [('brand__name_en', brand),('category__name_en', category),('site', site)]
+        if model:
+            filter_fields_dict['model__iregex'] = rf'\b{model}\b'
 
-            # crate dynamic fields
-            filter_fildes_list = list(filter(None, list(map(find_not_empty, fields))))
-            filter_fildes_dict = {k: v for d in filter_fildes_list for k, v in d.items()}
-            
-            if model:
-                filter_fildes_dict['model__iregex'] = rf'\b{model}\b'              
-            # filter_filds_dict.update({'model__icontains': model})
-            # print(filter_fildes_dict)
+        accessories = ProductAccessories.objects.filter(
+            **filter_fields_dict,
+            updated_at__gt=two_days_ago,
+        ).values(
+            'id', 'model', 'old_min_price', 'color_name',
+            'seller', 'guarantee', 'max_price',
+            'min_price', 'site', 'updated_at',
+            'url', 'brand__name_fa', 'brand__name_en',
+            'category__name_fa', 'category__name_en',
+            'color_hex', 'price_change_time', 'title',
+            'description', 'fake', 'stock',
+            "custom_id", "status", "price_changes_24h"
+        ).order_by('min_price')
 
-            accessories = ProductAccessories.objects.filter(
-                **filter_fildes_dict,
-                updated_at__gt=two_days_ago,       
-            ).select_related(brand).values('id', 'model', 'old_min_price', 'color_name',
-                                        'seller', 'guarantee', 'max_price',
-                                        'min_price', 'site', 'updated_at', 
-                                        'url', 'brand__name_fa', 'brand__name_en',
-                                        'category__name_fa', 'category__name_en',  'color_hex',
-                                        'price_change_time', 'title','description', 'fake', 'stock',
-                                        "custom_id", "status").order_by('min_price')
+    # 🔥 محاسبه مجموع تغییر قیمت ۲۴ ساعته
+    now = timezone.now()
+    result = []
 
+    for a in accessories:
+        total_change = 0
+        valid_changes = []
 
-            # Return the JSON response with the filtered mobile data
-            return JsonResponse(list(accessories), safe=False)
+        for c in a.get("price_changes_24h") or []:
+            time_str = c.get("time")
+            change_value = c.get("change", 0)
 
-    # Handle other HTTP methods or errors
-    return JsonResponse({'error': 'Invalid request method'}, status=400)
+            if not time_str:
+                continue
 
+            parsed = parse_datetime(time_str)
+            if not parsed:
+                continue
+
+            # timezone-aware
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=timezone.utc)
+
+            if now - parsed <= timedelta(hours=24):
+                try:
+                    total_change += float(change_value)
+                    valid_changes.append(c)
+                except ValueError:
+                    continue
+
+        a["price_changes_24h"] = valid_changes
+        a["price_changes_24h_total"] = total_change
+        result.append(a)
+
+    return JsonResponse(result, safe=False)
 
 def set_custom_accessories_id(request):
 

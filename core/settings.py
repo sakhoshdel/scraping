@@ -98,12 +98,25 @@ WSGI_APPLICATION = 'core.wsgi.application'
 #     }
 # }
 
+# DATABASES = {
+#      'default': {
+#          'ENGINE': 'django.db.backends.mysql',
+#          'NAME': 'scraping_db',
+#          'USER': 'scraping',
+#          'PASSWORD': 'Ww0ygcseN,40!oXz',
+#          'HOST': 'localhost',
+#          'PORT': '',
+#          'OPTIONS': {
+#              'charset': 'utf8mb4',
+#          },
+#      }
+# }
 DATABASES = {
      'default': {
          'ENGINE': 'django.db.backends.mysql',
-         'NAME': 'scraping_db',
-         'USER': 'scraping',
-         'PASSWORD': 'Ww0ygcseN,40!oXz',
+         'NAME': 'scraping',
+         'USER': 'root',
+         'PASSWORD': '',
          'HOST': 'localhost',
          'PORT': '',
          'OPTIONS': {
