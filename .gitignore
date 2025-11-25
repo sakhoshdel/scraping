@@ -1,0 +1,24 @@
+# Virtual environments
+venv/
+ENV/
+env/
+.venv/
+
+# System / build / cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+
+# Files not to push
+khazesh.sql
+google-chrome-stable_current_amd64.deb
+
+# Node
+node_modules/
+npm-debug.log
+
+# Django specific
+*.sqlite3
+
