@@ -1,0 +1,914 @@
+from django.shortcuts import render
+# from django.http import HttpResponse
+from .models import Brand, Mobile, ProductAccessories, ProductLaptop, CodeExecutionState, CodeExecutionStateLaptop, CodeExecutionStateAccessories, BrandAccessories, CategoryAccessories
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import LoginView
+# from django.urls import reverse_lazy
+from django.contrib import messages
+# from django.core.serializers import serialize
+# from urllib.parse import unquote
+from django.utils import timezone
+from rest_framework.viewsets import  ModelViewSet
+from rest_framework.viewsets import ViewSet
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
+# from django.db.models import Q
+from khazesh.serializers import MobileSerilizer, LaptopSerializer, AccessoriesSerializer
+from fuzzywuzzy import fuzz
+from datetime import timedelta
+from django.utils.dateparse import parse_datetime
+import re
+import json
+from rest_framework.response import Response
+from django.db.models import Min, Max
+from django.utils.dateparse import parse_datetime
+import datetime
+
+
+
+class DalgaStatusViewSet(ViewSet):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request):
+        sites_param = request.query_params.get('sites', '')
+
+        # توکن login_token دیگه نیاز نیست چون احراز هویت با Bearer انجام میشه
+        site_names = [s.strip() for s in sites_param.split(',') if s.strip()]
+        if not site_names:
+            return Response({'error': 'لیست سایت‌ها ارسال نشده'}, status=400)
+
+        one_hour_ago = timezone.now() - timedelta(hours=1)
+
+        recent_updates = CodeExecutionState.objects.filter(
+            name__in=site_names,
+            last_executed__gte=one_hour_ago
+        ).count()
+
+        if recent_updates == 0:
+            return Response({'dalga_active': False, 'message': 'دالگا غیرفعال است.'})
+        return Response({'dalga_active': True})
+
+class MobileApiView(ViewSet):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def list(self, request, *args, **kwargs):
+        category = request.query_params.get("category")  # mobile, laptop, charger, ...
+        custom_id = request.query_params.get("id", None)
+
+        if not category or not custom_id:
+            return Response({"detail": "category and id are required"}, status=400)
+
+        two_days_ago = timezone.now() - timezone.timedelta(minutes=59)
+
+        # انتخاب مدل و کوئری‌ست
+        if category in ["mobile", "tablet"]:
+            queryset = Mobile.objects.filter(
+                custom_id=custom_id, updated_at__gt=two_days_ago, status=True
+            )
+            serializer_class = MobileSerilizer
+
+        elif category == "laptop":
+            queryset = ProductLaptop.objects.filter(
+                custom_id=custom_id, updated_at__gt=two_days_ago, status=True
+            )
+            serializer_class = LaptopSerializer
+
+        else:
+            try:
+                cat_obj = CategoryAccessories.objects.get(name_en=category)
+            except CategoryAccessories.DoesNotExist:
+                return Response({"detail": "Invalid accessory category"}, status=400)
+
+            queryset = ProductAccessories.objects.filter(
+                custom_id=custom_id,
+                category=cat_obj,
+                updated_at__gt=two_days_ago,
+                status=True,
+            )
+            serializer_class = AccessoriesSerializer
+
+        # دریافت لیست سایت‌ها از کوئری
+        buy_sites_param = request.query_params.get("buy_sites", "")
+        sell_sites_param = request.query_params.get("sell_sites", "")
+
+        buy_sites = set(s.strip() for s in buy_sites_param.split(",") if s.strip())
+        sell_sites = set(s.strip() for s in sell_sites_param.split(",") if s.strip())
+
+        buy_queryset = queryset.filter(site__in=buy_sites)
+        sell_queryset = queryset.filter(site__in=sell_sites)
+
+        buy_data = serializer_class(buy_queryset, many=True).data
+        sell_data = serializer_class(sell_queryset, many=True).data
+
+        buy_min = buy_queryset.aggregate(min_price=Min("min_price"))["min_price"]
+        sell_min = sell_queryset.aggregate(min_price=Min("min_price"))["min_price"]
+
+        buy_min_source = None
+        sell_min_source = None
+
+        if buy_min is not None:
+            buy_min_item = buy_queryset.filter(min_price=buy_min).first()
+            if buy_min_item:
+                buy_min_source = buy_min_item.site
+
+        if sell_min is not None:
+            sell_min_item = sell_queryset.filter(min_price=sell_min).first()
+            if sell_min_item:
+                sell_min_source = sell_min_item.site
+
+        return Response(
+            {
+                "buy_sites": {
+                    "items": buy_data,
+                    "min_price": int(buy_min / 10) if buy_min else None,
+                    "source": buy_min_source,
+                },
+                "sell_sites": {
+                    "items": sell_data,
+                    "min_price": int(sell_min / 10) if sell_min else None,
+                    "source": sell_min_source,
+                },
+            }
+        )
+        
+        
+        
+        
+# from django.contrib.admin.views
+class MyLoginView(LoginView):
+    redirect_authenticated_user = True
+    
+    # def get_success_url(self):
+    #     return reverse_lazy('tasks') 
+    
+    def form_invalid(self, form):
+        messages.error(self.request,'Invalid username or password')
+        return self.render_to_response(self.get_context_data(form=form))
+
+
+def find_not_empty(filed_tuple):
+    field_name, field_value = filed_tuple
+    if field_value:
+        return {field_name: field_value}
+
+
+@login_required(login_url='/admin/login/')
+def search_accessories(request, category):
+    brand = BrandAccessories.objects.all()
+    categories = CategoryAccessories.objects.all()
+    return render(request, 'accessories.html', {'brands': brand, 'categories': categories, 'category_name' : category})
+
+
+@login_required(login_url='/admin/login/')
+def search_mobiles(request):
+    all_site_status = CodeExecutionState.objects.all().order_by('-last_executed')
+    return render(request, 'index.html', {'site_crashes':all_site_status})
+
+
+@login_required(login_url='/admin/login/')
+def search_tablet(request):
+    all_site_status = CodeExecutionState.objects.all().order_by('-last_executed')
+    return render(request, 'tablet.html', {'site_crashes':all_site_status})
+
+
+@login_required(login_url='/admin/login/')
+def search_laptop(request):
+    all_site_status = CodeExecutionStateLaptop.objects.all().order_by('-last_executed')
+
+    # حافظه داخلی
+    storages = ProductLaptop.objects.values_list("storage", flat=True).distinct()
+    storages = [s.strip() for s in storages if s]
+
+    # رم
+    rams = ProductLaptop.objects.values_list("ram", flat=True).distinct()
+    rams = [r.strip() for r in rams if r]
+
+    # CPU → نرمال‌سازی فقط سری
+    cpus_raw = ProductLaptop.objects.values_list("cpu", flat=True).distinct()
+    cpus = []
+    for cpu in cpus_raw:
+        if not cpu:
+            continue
+        c = cpu.lower()
+        if "i3" in c: cpus.append("Intel Core i3")
+        elif "i5" in c: cpus.append("Intel Core i5")
+        elif "i7" in c: cpus.append("Intel Core i7")
+        elif "i9" in c: cpus.append("Intel Core i9")
+        elif "ryzen 3" in c: cpus.append("AMD Ryzen 3")
+        elif "ryzen 5" in c: cpus.append("AMD Ryzen 5")
+        elif "ryzen 7" in c: cpus.append("AMD Ryzen 7")
+        elif "ryzen 9" in c: cpus.append("AMD Ryzen 9")
+
+    cpus = sorted(set(cpus))
+
+    return render(
+        request,
+        'laptop.html',
+        {
+            'site_crashes': all_site_status,
+            'storages': sorted(set(storages)),
+            'rams': sorted(set(rams)),
+            'cpus': cpus,
+        }
+    )
+
+def site_status(request):
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        # تعریف تابع کمکی برای محاسبه وضعیت
+        def enrich_status(data):
+            result = []
+            for item in data:
+                status = item.get('status', False)
+                fail_count = item.get('fail_count', 0)
+                last_success_at = item.get('last_success_at')
+                status_text = item.get('status_text', 'PENDING')
+
+                if status:
+                    status_text = "SUCCESS"
+                    fail_count = 0
+                    last_success_at = item.get('last_executed')
+                else:
+                    fail_count = (fail_count or 0) + 1
+                    if fail_count < 3:
+                        status_text = "WARNING"
+                    else:
+                        status_text = "FAILING"
+
+                item.update({
+                    'status_text': status_text,
+                    'fail_count': fail_count,
+                    'last_success_at': last_success_at
+                })
+                result.append(item)
+            return result
+
+        # --- دسته‌ها ---
+        mobile = CodeExecutionState.objects.exclude(name__icontains="-tablet")\
+            .order_by('-last_executed')\
+            .values('name', 'last_executed', 'status', 'fail_count', 'last_success_at', 'status_text')
+
+        tablet = CodeExecutionState.objects.filter(name__icontains="-tablet")\
+            .order_by('-last_executed')\
+            .values('name', 'last_executed', 'status', 'fail_count', 'last_success_at', 'status_text')
+
+        laptop = CodeExecutionStateLaptop.objects.order_by('-last_executed')\
+            .values('name', 'last_executed', 'status', 'fail_count', 'last_success_at', 'status_text')
+
+        # لوازم جانبی
+        watchs = CodeExecutionStateAccessories.objects.filter(category__name_en="watchs")\
+            .order_by('-last_executed')\
+            .values('name','last_executed','category__name_fa','status', 'fail_count', 'last_success_at', 'status_text')
+
+        handsfree = CodeExecutionStateAccessories.objects.filter(category__name_en="handsfree")\
+            .order_by('-last_executed')\
+            .values('name','last_executed','category__name_fa','status', 'fail_count', 'last_success_at', 'status_text')
+
+        powerbank = CodeExecutionStateAccessories.objects.filter(category__name_en="powerbank")\
+            .order_by('-last_executed')\
+            .values('name','last_executed','category__name_fa','status', 'fail_count', 'last_success_at', 'status_text')
+
+        charger = CodeExecutionStateAccessories.objects.filter(category__name_en="charger")\
+            .order_by('-last_executed')\
+            .values('name','last_executed','category__name_fa','status', 'fail_count', 'last_success_at', 'status_text')
+
+        speaker = CodeExecutionStateAccessories.objects.filter(category__name_en="speaker")\
+            .order_by('-last_executed')\
+            .values('name','last_executed','category__name_fa','status', 'fail_count', 'last_success_at', 'status_text')
+
+        # --- خروجی با داده‌ی بهبودیافته ---
+        return JsonResponse({
+            'mobile': enrich_status(list(mobile)),
+            'tablet': enrich_status(list(tablet)),
+            'laptop': enrich_status(list(laptop)),
+            'watchs': enrich_status(list(watchs)),
+            'handsfree': enrich_status(list(handsfree)),
+            'powerbank': enrich_status(list(powerbank)),
+            'charger': enrich_status(list(charger)),
+            'speaker': enrich_status(list(speaker)),
+        }, safe=False)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
+    
+def clean_boolean(value):
+    """تبدیل ورودی به True/False یا None برای BooleanField"""
+    if str(value).lower() in ["true", "1"]:
+        return True
+    elif str(value).lower() in ["false", "0"]:
+        return False
+    return None
+
+def ajax_search(request):
+    if request.headers.get('x-requested-with') != 'XMLHttpRequest':
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+    two_days_ago = timezone.now() - timedelta(days=2, minutes=15)
+    typeMobile = True if request.GET.get('type', '') == 'mobile' else False
+
+    model = request.GET.get('model', '').strip()
+    brand = request.GET.get('brand', '').strip()
+    ram = request.GET.get('ram', '').strip()
+    memory = request.GET.get('memory', '').strip()
+    vietnam = clean_boolean(request.GET.get('vietnam', '').strip())
+    site = request.GET.get('site', '').strip()
+    not_active = clean_boolean(request.GET.get('not_active', '').strip())
+
+    if model.isdigit():
+        mobiles = Mobile.objects.filter(
+            custom_id__icontains=model,
+            updated_at__gt=two_days_ago,
+            mobile=typeMobile,
+        ).select_related("brand").values(
+            'id', 'model', 'old_min_price', 'not_active', 'color_name',
+            'seller', 'guarantee', 'ram', 'memory',
+            'vietnam', 'dual_sim', 'max_price',
+            'min_price', 'site', 'updated_at',
+            'url', 'brand__name', 'color_hex',
+            'price_change_time', 'title',
+            "custom_id", "status", "price_changes_24h"
+        ).order_by('min_price')
+
+    else:
+        # ساخت دیکشنری فیلتر با حذف None
+        fields = [
+            ('brand__name', brand),
+            ('ram', ram),
+            ('memory__icontains', memory),
+            ('not_active', not_active),
+            ('vietnam', vietnam),
+            ('site', site)
+        ]
+
+        filter_fields_dict = {k: v for k, v in fields if v not in [None, ""]}
+
+        if model:
+            filter_fields_dict['model__iregex'] = rf'\b{model}\b'
+
+        mobiles = Mobile.objects.filter(
+            **filter_fields_dict,
+            updated_at__gt=two_days_ago,
+            mobile=typeMobile,
+        ).select_related("brand").values(
+            'id', 'model', 'old_min_price', 'not_active', 'color_name',
+            'seller', 'guarantee', 'ram', 'memory',
+            'vietnam', 'dual_sim', 'max_price',
+            'min_price', 'site', 'updated_at',
+            'url', 'brand__name', 'color_hex',
+            'price_change_time', 'title',
+            "custom_id", "status", "price_changes_24h"
+        ).order_by('min_price')
+
+    # 🔥 محاسبه مجموع تغییر قیمت ۲۴ ساعته
+    now = timezone.now()
+    result = []
+
+    for m in mobiles:
+        total_change = 0
+        valid_changes = []  # فقط تغییرات ۲۴ ساعت اخیر
+
+        for c in m.get("price_changes_24h") or []:
+            time_str = c.get("time")
+            change_value = c.get("change", 0)
+
+            if not time_str:
+                continue
+
+            parsed = parse_datetime(time_str)
+            if not parsed:
+                continue
+
+            # timezone-aware
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=timezone.utc)
+
+            if now - parsed <= timedelta(hours=24):
+                try:
+                    total_change += float(change_value)
+                    valid_changes.append(c)
+                except ValueError:
+                    continue
+
+        # فقط تغییرات اخیر رو برگردون
+        m["price_changes_24h"] = valid_changes
+        m["price_changes_24h_total"] = total_change
+        result.append(m)
+
+    return JsonResponse(result, safe=False)
+
+def accessories_ajax_search(request):
+    if request.headers.get('x-requested-with') != 'XMLHttpRequest':
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+    two_days_ago = timezone.now() - timedelta(days=2, minutes=15)
+
+    model = request.GET.get('model', '').strip()
+    brand = request.GET.get('brand', '')
+    category = request.GET.get('category', '')
+    site = request.GET.get('site', '')
+
+    if model.isdigit():
+        accessories = ProductAccessories.objects.filter(
+            custom_id__icontains=model,
+            updated_at__gt=two_days_ago,
+        ).values(
+            'id', 'model', 'old_min_price', 'color_name',
+            'seller', 'guarantee', 'max_price',
+            'min_price', 'site', 'updated_at',
+            'url', 'brand__name_fa', 'brand__name_en',
+            'category__name_fa', 'category__name_en',
+            'color_hex', 'price_change_time', 'title',
+            'description', 'fake', 'stock',
+            "custom_id", "status", "price_changes_24h"
+        ).order_by('min_price')
+    else:
+        fields = [
+            ('brand__name_en', brand),
+            ('category__name_en', category),
+            ('site', site),
+        ]
+        filter_fields_dict = {k: v for k, v in fields if v not in [None, ""]}
+
+        if model:
+            filter_fields_dict['model__iregex'] = rf'\b{model}\b'
+
+        accessories = ProductAccessories.objects.filter(
+            **filter_fields_dict,
+            updated_at__gt=two_days_ago,
+        ).values(
+            'id', 'model', 'old_min_price', 'color_name',
+            'seller', 'guarantee', 'max_price',
+            'min_price', 'site', 'updated_at',
+            'url', 'brand__name_fa', 'brand__name_en',
+            'category__name_fa', 'category__name_en',
+            'color_hex', 'price_change_time', 'title',
+            'description', 'fake', 'stock',
+            "custom_id", "status", "price_changes_24h"
+        ).order_by('min_price')
+
+    # 🔥 محاسبه مجموع تغییر قیمت ۲۴ ساعته
+    now = timezone.now()
+    result = []
+
+    for a in accessories:
+        total_change = 0
+        valid_changes = []
+
+        for c in a.get("price_changes_24h") or []:
+            time_str = c.get("time")
+            change_value = c.get("change", 0)
+
+            if not time_str:
+                continue
+
+            parsed = parse_datetime(time_str)
+            if not parsed:
+                continue
+
+            # timezone-aware
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=timezone.utc)
+
+            if now - parsed <= timedelta(hours=24):
+                try:
+                    total_change += float(change_value)
+                    valid_changes.append(c)
+                except ValueError:
+                    continue
+
+        a["price_changes_24h"] = valid_changes
+        a["price_changes_24h_total"] = total_change
+        result.append(a)
+
+    return JsonResponse(result, safe=False)
+
+
+
+
+def normalize_cpu(cpu: str):
+    """برگردوندن فقط بخش اصلی CPU (مثلا Core i5 یا Ryzen 7)"""
+    if not cpu:
+        return ""
+    cpu = cpu.lower().replace("-", " ").strip()
+
+    # اینتل
+    if "i3" in cpu:
+        return "core i3"
+    if "i5" in cpu:
+        return "core i5"
+    if "i7" in cpu:
+        return "core i7"
+    if "i9" in cpu:
+        return "core i9"
+
+    # ای‌ام‌دی
+    if "ryzen 3" in cpu:
+        return "ryzen 3"
+    if "ryzen 5" in cpu:
+        return "ryzen 5"
+    if "ryzen 7" in cpu:
+        return "ryzen 7"
+    if "ryzen 9" in cpu:
+        return "ryzen 9"
+
+    return cpu
+
+
+def ajax_search_laptop(request):
+    if request.headers.get('x-requested-with') != 'XMLHttpRequest':
+        return JsonResponse({'error': 'Invalid request'}, status=400)
+
+    two_days_ago = timezone.now() - timedelta(days=2)
+
+    # پارامترهای GET
+    model   = request.GET.get('model', '').strip()
+    brand   = request.GET.get('brand', '').strip()
+    ram     = request.GET.get('ram', '').strip()
+    storage = request.GET.get('storage', '').strip() or request.GET.get('memory', '').strip()
+    cpu     = normalize_cpu(request.GET.get('cpu', '').strip())
+    gpu     = request.GET.get('gpu', '').strip()
+    display = request.GET.get('display', '').strip()
+    site    = request.GET.get('site', '').strip()
+    seller  = request.GET.get('seller', '').strip()
+
+    # فیلترها
+    filters = {"updated_at__gt": two_days_ago}
+    if model:
+        filters["model__icontains"] = model
+    if brand:
+        filters["brand__name_en__icontains"] = brand
+    if ram:
+        filters["ram__icontains"] = ram
+    if storage:
+        filters["storage__icontains"] = storage
+    if cpu:
+        filters["cpu__icontains"] = cpu   # فقط Core i5 یا Ryzen 7
+    if gpu:
+        filters["gpu__icontains"] = gpu
+    if display:
+        filters["display_size__icontains"] = display
+    if site:
+        filters["site__icontains"] = site
+    if seller:
+        filters["seller__icontains"] = seller
+
+    # کوئری دیتابیس
+    laptops = ProductLaptop.objects.filter(**filters).select_related("brand").values(
+        "id", "model", "title", "ram", "storage", "cpu", "gpu",
+        "display_size", "min_price", "max_price", "old_min_price",
+        "price_change_time", "price_changes_24h", "updated_at",
+        "brand__name_fa", "brand__name_en", "site", "seller", "guarantee",
+        "color_name", "color_hex", "custom_id", "status", "url"
+    ).order_by("min_price")
+
+    # پردازش تغییرات ۲۴ ساعته
+    now = timezone.now()
+    result = []
+    for m in laptops:
+        valid_changes = []
+        total_change = 0
+        for c in m.get("price_changes_24h") or []:
+            parsed = parse_datetime(c.get("time"))
+            if parsed and now - parsed <= timedelta(hours=24):
+                try:
+                    total_change += float(c.get("change", 0))
+                    valid_changes.append(c)
+                except ValueError:
+                    pass
+        m["price_changes_24h"] = valid_changes
+        m["price_changes_24h_total"] = total_change
+        result.append(m)
+
+    return JsonResponse(result, safe=False)
+
+
+def normalize_cpu(cpu: str):
+    """برگردوندن فقط بخش اصلی CPU (مثلا Core i5 یا Ryzen 7)"""
+    if not cpu:
+        return ""
+    cpu = cpu.lower().replace("-", " ").strip()
+
+    # اینتل
+    if "i3" in cpu:
+        return "core i3"
+    if "i5" in cpu:
+        return "core i5"
+    if "i7" in cpu:
+        return "core i7"
+    if "i9" in cpu:
+        return "core i9"
+
+    # ای‌ام‌دی
+    if "ryzen 3" in cpu:
+        return "ryzen 3"
+    if "ryzen 5" in cpu:
+        return "ryzen 5"
+    if "ryzen 7" in cpu:
+        return "ryzen 7"
+    if "ryzen 9" in cpu:
+        return "ryzen 9"
+
+    return cpu
+
+
+def ajax_search_laptop(request):
+    if request.headers.get('x-requested-with') != 'XMLHttpRequest':
+        return JsonResponse({'error': 'Invalid request'}, status=400)
+
+    two_days_ago = timezone.now() - timedelta(days=2)
+
+    # پارامترهای GET
+    model   = request.GET.get('model', '').strip()
+    brand   = request.GET.get('brand', '').strip()
+    ram     = request.GET.get('ram', '').strip()
+    storage = request.GET.get('storage', '').strip() or request.GET.get('memory', '').strip()
+    cpu     = normalize_cpu(request.GET.get('cpu', '').strip())
+    gpu     = request.GET.get('gpu', '').strip()
+    display = request.GET.get('display', '').strip()
+    site    = request.GET.get('site', '').strip()
+    seller  = request.GET.get('seller', '').strip()
+
+    # فیلترها
+    filters = {"updated_at__gt": two_days_ago}
+    if model:
+        filters["model__icontains"] = model
+    if brand:
+        filters["brand__name_en__icontains"] = brand
+    if ram:
+        filters["ram__icontains"] = ram
+    if storage:
+        filters["storage__icontains"] = storage
+    if cpu:
+        filters["cpu__icontains"] = cpu   # فقط Core i5 یا Ryzen 7
+    if gpu:
+        filters["gpu__icontains"] = gpu
+    if display:
+        filters["display_size__icontains"] = display
+    if site:
+        filters["site__icontains"] = site
+    if seller:
+        filters["seller__icontains"] = seller
+
+    # کوئری دیتابیس
+    laptops = ProductLaptop.objects.filter(**filters).select_related("brand").values(
+        "id", "model", "title", "ram", "storage", "cpu", "gpu",
+        "display_size", "min_price", "max_price", "old_min_price",
+        "price_change_time", "price_changes_24h", "updated_at",
+        "brand__name_fa", "brand__name_en", "site", "seller", "guarantee",
+        "color_name", "color_hex", "custom_id", "status", "url"
+    ).order_by("min_price")
+
+    # پردازش تغییرات ۲۴ ساعته
+    now = timezone.now()
+    result = []
+    for m in laptops:
+        valid_changes = []
+        total_change = 0
+        for c in m.get("price_changes_24h") or []:
+            parsed = parse_datetime(c.get("time"))
+            if parsed and now - parsed <= timedelta(hours=24):
+                try:
+                    total_change += float(c.get("change", 0))
+                    valid_changes.append(c)
+                except ValueError:
+                    pass
+        m["price_changes_24h"] = valid_changes
+        m["price_changes_24h_total"] = total_change
+        result.append(m)
+
+    return JsonResponse(result, safe=False)
+
+
+
+def set_custom_accessories_id(request):
+
+
+    if request.method== 'GET':
+
+        custom_id = request.GET.get('custom_id', '')
+        model_id = request.GET.get('id', '')
+        accessories = ProductAccessories.objects.filter(id=model_id)
+        len_accessories = len(accessories)
+
+        if len_accessories > 1 or len_accessories == 0:
+            return JsonResponse({"Response": "Faild", "reason": "مشکل در سرور"})
+        
+        try:
+            accessories = accessories.first()
+            accessories.custom_id = custom_id
+            accessories.save()
+            return JsonResponse({"Response": 'success'}, status=203)
+        except Exception as e:
+            return JsonResponse({"Response": "Faild", "reason": "مشکل در ذخیره ابجکت"})
+            
+
+    
+    return JsonResponse({'Response': 'Faild', "reason": f"{request.method}"})
+
+def set_custom_mobile_id(request):
+
+    # print('###', request.headers.get('x-requested-with'))
+    # print(request.method)
+    if request.method== 'GET':
+        # title = unquote(request.GET.get('title', ''), encoding='utf-8')
+        # memory = request.GET.get('memory', '')
+        # ram = request.GET.get('ram', '')
+        # color_name = unquote(request.GET.get('color_name', ''))
+        # site = unquote(request.GET.get('site', ''))
+        # seller = unquote(request.GET.get('seller', ''))
+        # guarantee = unquote(request.GET.get('guarantee', ''))
+        custom_id = request.GET.get('custom_id', '')
+        model_id = request.GET.get('id', '')
+        
+        # filters = {'title__icontains': title,
+        #           'color_name': color_name,
+        #           'site': site,
+        #           'seller__icontains': seller,
+       
+        #         }
+        
+        # if ram:
+        #     filters['ram'] = ram
+        # if memory:
+        #     filters['memory'] = memory
+            
+        # print(request.GET)
+        # print('color_name', color_name)
+        # print(filters)
+        
+        # mobile = Mobile.objects.filter(**filters)
+        mobile = Mobile.objects.filter(id=model_id)
+        len_mobile = len(mobile)
+        # print('len_mobile', len_mobile)
+        # print(mobile)
+        if len_mobile > 1 or len_mobile == 0:
+            return JsonResponse({"Response": "Faild", "reason": "مشکل در سرور"})
+        
+        try:
+            mobile = mobile.first()
+            mobile.custom_id = custom_id
+            mobile.save()
+            return JsonResponse({"Response": 'success'}, status=203)
+        except Exception as e:
+            return JsonResponse({"Response": "Faild", "reason": "مشکل در ذخیره ابجکت"})
+            
+        # serialized_mobile = serialize('json', mobile)
+        
+        # print(serialized_mobile)
+        
+        # return JsonResponse({"Response": "success"}, safe=False)
+    
+    return JsonResponse({'Response': 'Faild', "reason": f"{request.method}"})
+
+
+def set_custom_laptop_id(request):
+    if request.method== 'GET':
+        custom_id = request.GET.get('custom_id', '')
+        model_id = request.GET.get('id', '')
+        laptop = ProductLaptop.objects.filter(id=model_id)
+        len_laptop = len(laptop)
+        if len_laptop > 1 or len_laptop == 0:
+            return JsonResponse({"Response": "Faild", "reason": "مشکل در سرور"})
+        
+        try:
+            laptop = laptop.first()
+            laptop.custom_id = custom_id
+            laptop.save()
+            return JsonResponse({"Response": 'success'}, status=203)
+        except Exception as e:
+            return JsonResponse({"Response": "Faild", "reason": "مشکل در ذخیره ابجکت"})
+    
+    return JsonResponse({'Response': 'Faild', "reason": f"{request.method}"})
+
+
+def search_mobiles_without_custom_id(request):
+
+    return render(request, 'set_auto_custom_id.html')
+
+
+def set_auto_custom_id_page(request):
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        two_days_ago = timezone.now() - timezone.timedelta(days=2, minutes=15)
+
+        # Get query parameters from the AJAX request
+        model:str = request.GET.get('model', '').strip()
+        brand = request.GET.get('brand', '')
+        ram = request.GET.get('ram', '')
+        memory = request.GET.get('memory', '')
+        vietnam = request.GET.get('vietnam', '')
+        site = request.GET.get('site', '')
+        not_active = request.GET.get('not_active', '')
+        if not_active == 'null':
+            not_active = ''
+
+    
+        fields = [('brand__name', brand), ('ram', ram),
+                ('memory__icontains', memory), ('not_active', not_active), ('vietnam', vietnam), ('site', site)]
+
+        # crate dynamic fields
+        filter_fildes_list = list(filter(None, list(map(find_not_empty, fields))))
+        filter_fildes_dict = {k: v for d in filter_fildes_list for k, v in d.items()}
+        # filter_fildes_dict.update({'model__icontains': model})
+        # print(filter_fildes_dict)
+
+        if model:
+            filter_fildes_dict['model__iregex'] = rf"\b{model}\b"
+        mobiles = Mobile.objects.filter(
+            **filter_fildes_dict,
+            # updated_at__gt=two_days_ago,   
+            custom_id__isnull=True,   
+  
+        ).select_related(brand).values('id', 'model', 'old_min_price', 'not_active', 'color_name',
+                                    'seller', 'guarantee', 'ram', 'memory',
+                                    'vietnam', 'dual_sim', 'max_price',
+                                    'min_price', 'site', 'updated_at', 
+                                    'url', 'brand__name',  'color_hex',
+                                    'price_change_time', 'title',
+                                    "custom_id").order_by('min_price')
+        # print(mobiles)
+
+        # Return the JSON response with the filtered mobile data
+        return JsonResponse(list(mobiles), safe=False)
+
+    # Handle other HTTP methods or errors
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+
+MOBOMIN_CROWLED_BRANDS = ['samsung', 'xiaomi', 'nokia','honor', 'poco']
+
+
+def remove_brand_from_start(model: str, brands: list) -> str:
+    # Create a regex pattern to match any of the brands at the start, ignoring case
+    
+    pattern = r'^(' + '|'.join(map(re.escape, brands)) + r')\s*'
+    # Replace the matched brand with an empty string
+    return re.sub(pattern, '', model, flags=re.IGNORECASE)
+
+def get_similar_mobiles(request):
+    if request.method == 'GET':
+        two_days_ago = timezone.now() - timezone.timedelta(days=2, minutes=15)
+        # Get query parameters from the AJAX request
+        model:str = request.GET.get('model', '').strip()
+        model = remove_brand_from_start(model, MOBOMIN_CROWLED_BRANDS)
+        brand = request.GET.get('brand', '')
+        ram = request.GET.get('ram', '')
+        memory = request.GET.get('memory', '')
+        vietnam = request.GET.get('vietnam', '')
+        print('vietnam', vietnam)
+        mobile_id = request.GET.get('id', '')
+        not_active = request.GET.get('not_active', '')
+        if not_active == 'null':
+            not_active = ''
+
+        
+    
+        fields = [('brand__name', brand), ('ram', ram),
+                ('memory__icontains', memory), ('vietnam', vietnam), ('not_active', not_active)]
+
+        # crate dynamic fields
+        filter_fildes_list = list(filter(None, list(map(find_not_empty, fields))))
+        filter_fildes_dict = {k: v for d in filter_fildes_list for k, v in d.items()}
+        # filter_fildes_dict.update({'model__icontains': model})
+        # print(filter_fildes_dict)
+
+        # print('filter_fildes_dict', filter_fildes_dict)
+        mobiles = Mobile.objects.filter(
+            **filter_fildes_dict,
+            # updated_at__gt=two_days_ago,   
+            custom_id__isnull=False,   
+        )\
+        .exclude(id=int(mobile_id))\
+        .exclude(custom_id='')\
+        .select_related(brand).values('id', 'model', 'old_min_price', 'not_active', 'color_name',
+                                    'seller', 'guarantee', 'ram', 'memory',
+                                    'vietnam', 'dual_sim', 'max_price',
+                                    'min_price', 'site', 'updated_at', 
+                                    'url', 'brand__name', 'color_hex',
+                                    'price_change_time', 'title',
+                                    "custom_id").order_by('min_price')
+        
+        similar_mobiles= []
+        # mobiles = filter(lambda mobile: mobile.get('id', '') != int(mobile_id), mobiles)
+        for mobile in mobiles:
+            cleaned_model = remove_brand_from_start(mobile.get('model', ''), MOBOMIN_CROWLED_BRANDS)
+            # print(mobile.get('model', ''))
+            # print(cleaned_model)
+            # print(model)
+            ratio = fuzz.WRatio(model, cleaned_model)
+            # print(ratio)
+            if ratio >= 50:
+                similar_mobiles.append(mobile)
+        
+        # print(similar_mobiles)
+        # print(len(similar_mobiles))
+        # print(list(mobiles))
+        # print(len(list(mobiles)))
+
+        # print(list(mobiles))           
+        return JsonResponse(similar_mobiles, safe=False)
+
+    # Handle other HTTP methods or errors
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+        

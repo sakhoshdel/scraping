@@ -1,0 +1,1009 @@
+{% load static %}
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <link rel="shortcut icon" href="{% static 'images/site-badge.png' %}" type="image/png">
+    <!-- <link
+      href="https://fonts.googleapis.com/css?family=Roboto:400,700"
+      rel="stylesheet"
+    /> -->
+    <!-- <link rel="stylesheet" href="{% static 'css/main.css' %}?v={{ STATIC_VERSION }}" /> -->
+    <link rel="stylesheet" href="{% static 'css/main.css' %}?v=2" />
+    <!-- Font Awesome 6 (آخرین نسخه) -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+
+</head>
+<!-- <script src='{% static "/js/main.js" %}'></script> -->
+<script src={% static "/js/code.jquery.com_jquery-3.6.0.min.js" %}></script>
+
+<body>
+    <style>
+        .green-text {
+            color: green;
+        }
+        
+        .red-text {
+            color: red;
+        }
+        
+        .price-tooltip:hover {
+            display: block !important;
+        }
+        
+        .price-tooltip-container {
+            display: inline-block;
+            position: relative;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .price-tooltip {
+            display: none;
+            position: absolute;
+            top: 130%;
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            background: linear-gradient(135deg, #ffffff, #f9f9f9);
+            border: 1px solid #ddd;
+            padding: 14px 16px;
+            z-index: 100;
+            min-width: 300px;
+            max-width: 350px;
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .price-tooltip-container:hover .price-tooltip {
+            display: block;
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        .price-tooltip .tooltip-header {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 6px;
+            color: #333;
+        }
+        
+        .price-tooltip ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .price-tooltip li {
+            padding: 6px 0;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px dashed #eee;
+        }
+        
+        .price-tooltip li:last-child {
+            border-bottom: none;
+        }
+        
+        .price-tooltip .tooltip-date {
+            font-size: 12px;
+            color: #777;
+            margin-right: 8px;
+        }
+        
+        .green-text {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+        
+        .red-text {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+    </style>
+
+    <div>
+        <div class="webiart-logs">
+            <div class="webiart-mobile-logs d-none">
+                <div class="webiart-logs-title"> موبایل</div>
+                <div class="webiart-site-list"></div>
+            </div>
+            <div class="webiart-tablet-logs d-none">
+                <div class="webiart-logs-title"> تبلت</div>
+                <div class="webiart-site-list"></div>
+            </div>
+            <div class="webiart-laptop-logs d-none">
+                <div class="webiart-logs-title"> لپ‌تاپ</div>
+                <div class="webiart-site-list"></div>
+            </div>
+            <div class="webiart-watchs-logs d-none">
+                <div class="webiart-logs-title"> ساعت هوشمند</div>
+                <div class="webiart-site-list"></div>
+            </div>
+            <div class="webiart-handsfree-logs d-none">
+                <div class="webiart-logs-title"> هندزفری</div>
+                <div class="webiart-site-list"></div>
+            </div>
+            <div class="webiart-powerbank-logs d-none">
+                <div class="webiart-logs-title"> پاوربانک</div>
+                <div class="webiart-site-list"></div>
+            </div>
+            <div class="webiart-charger-logs d-none">
+                <div class="webiart-logs-title">شارژر</div>
+                <div class="webiart-site-list"></div>
+            </div>
+            <div class="webiart-speaker-logs d-none">
+                <div class="webiart-logs-title">اسپیکر</div>
+                <div class="webiart-site-list"></div>
+            </div>
+
+            <button type="button" class="webiart-toggle-btn" data-show='hide'>
+            <svg class="webiart-arrow-up d-none" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 512 299.283"><path fill="#fff" d="M75.334 286.691c-64.764 36.929-96.186-15.595-60.203-51.975L215.997 25.104c33.472-33.472 46.534-33.472 80.006 0l200.866 209.612c35.983 36.38 4.561 88.904-60.203 51.975L256 189.339 75.334 286.691z"/></svg>
+            <svg class="webiart-arrow-down"  shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 512 299.283"><path fill="#fff" d="M75.334 12.591C10.57-24.337-20.852 28.186 15.131 64.566l200.866 209.613c33.472 33.471 46.534 33.471 80.006 0L496.869 64.566c35.983-36.38 4.561-88.903-60.203-51.975L256 109.944 75.334 12.591z"/></svg>
+          </button>
+        </div>
+
+
+
+    </div>
+
+
+
+
+    <div class="text-center">
+        <a style="color: #e45c27;" href="https://bartardigital.com/" target="_blank">
+            <img src='{% static "/images/logo.svg" %}' alt="برتر دیجیتال">
+        </a>
+    </div>
+
+    <div class="webiart-nav">
+        <a href="/">گوشی موبایل</a>
+        <a href="/tablet">تبلت</a>
+        <a href="/laptop" class="active">لپ تاپ</a>
+        <a href="/accessories/watchs">ساعت هوشمند</a>
+        <a href="/accessories/handsfree">هندزفری</a>
+        <a href="/accessories/powerbank">پاوربانک</a>
+        <a href="/accessories/charger">شارژر</a>
+        <a href="/accessories/speaker">اسپیکر</a>
+    </div>
+
+    <div class="s008">
+
+        <form>
+            <div class="inner-form">
+                <div class="basic-search">
+                    <div class="input-field">
+                        <input id="search" type="text" placeholder="مدل لپ‌تاپ یا آیدی را وارد کنید" autocomplete="off" />
+                        <div class="icon-wrap">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
+                  <path d="M18.869 19.162l-5.943-6.484c1.339-1.401 
+                           2.075-3.233 2.075-5.178 0-2.003-0.78-3.887
+                           -2.197-5.303s-3.3-2.197-5.303-2.197
+                           -3.887 0.78-5.303 2.197-2.197 3.3-2.197
+                           5.303 0.78 3.887 2.197 5.303 3.3 2.197
+                           5.303 2.197c1.726 0 3.362-0.579 4.688-1.645
+                           l5.943 6.483c0.099 0.108 0.233 0.162
+                           0.369 0.162 0.121 0 0.242-0.043 0.338-0.131
+                           0.204-0.187 0.217-0.503 0.031-0.706zM1 7.5
+                           c0-3.584 2.916-6.5 6.5-6.5s6.5 2.916 6.5
+                           6.5-2.916 6.5-6.5 6.5-6.5-2.916-6.5-6.5z"></path>
+                </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="advance-search">
+                    <span class="desc">جستجوی پیشرفته</span>
+
+                    <!-- ردیف اول -->
+                    <div class="row">
+                        <div class="input-field">
+                            <div class="input-select">
+                                <select id="displayInput" data-trigger="" onChange="sendRequest_select()">
+                    <option  placeholder="" value="">سایز صفحه نمایش</option>
+                    <option value="13">13 اینچ</option>
+                    <option value="14">14 اینچ</option>
+                    <option value="15.6">15.6 اینچ</option>
+                    <option value="16">16 اینچ</option>
+                    <option value="17">17 اینچ</option>
+                  </select>
+                            </div>
+                        </div>
+
+                        <!-- سایت -->
+                        <div class="input-field">
+                            <div class="input-select">
+                                <select id="siteInput" data-trigger="" onChange="sendRequest_select()">
+                    <option  placeholder="" value="">سایت</option>
+                    <option value="Digikala">دیجی کالا</option>
+                    <option value="Tecnolife">تکنولایف</option>
+                    <option value="Hamrahtel">همراه تل</option>
+                    <option value="Etminantel">اطمینان تل</option>
+                  </select>
+                            </div>
+                        </div>
+
+                        <!-- برند -->
+                        <div class="input-field">
+                            <div class="input-select">
+                                <select id="brandInput" data-trigger="" onChange="sendRequest_select()">
+                    <option  placeholder="" value="">برند</option>
+                    <option value="asus">Asus</option>
+                    <option value="lenovo">Lenovo</option>
+                    <option value="acer">Acer</option>
+                    <option value="hp">Hp</option>
+                    <option value="dell">Dell</option>
+                    <option value="apple">Apple</option>
+                    <option value="msi">Msi</option>
+                  </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ردیف دوم -->
+                    <div class="row second">
+                        <!-- حافظه داخلی -->
+                        <div class="input-field">
+                            <div class="input-select">
+                                <select id="memoryInput" data-trigger="" onChange="sendRequest_select()">
+                                  <option placeholder="" value="">حافظه داخلی</option>
+                                  {% for storage in storages %}
+                                      <option value="{{ storage }}">{{ storage }}</option>
+                                  {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- رم -->
+                        <div class="input-field">
+                            <div class="input-select">
+                                <select id="ramInput" data-trigger="" onChange="sendRequest_select()">
+                                  <option placeholder="" value="">رم</option>
+                                  {% for ram in rams %}
+                                      <option value="{{ ram }}">{{ ram }}</option>
+                                  {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <!-- پردازنده -->
+                        <div class="input-field">
+                            <div class="input-select">
+                                <select id="cpuInput" data-trigger="" onChange="sendRequest_select()">
+                                  <option placeholder="" value="">پردازنده </option>
+                                  {% for cpu in cpus %}
+                                      <option value="{{ cpu }}">{{ cpu }}</option>
+                                  {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ردیف سوم -->
+                    <div class="row third">
+
+
+                        <!-- شمارنده نتایج -->
+                        <div class="input-field">
+                            <div class="result-count">
+                                <span id="result">0</span> نتیجه جستجو
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <style>
+            {
+                % comment %
+            }
+            
+            .element {
+                position: relative;
+                padding: 8px;
+                margin-bottom: 8px;
+                font-size: 13px
+            }
+            
+            {
+                % endcomment %
+            }
+            
+            .element {
+                position: relative;
+                display: grid;
+                grid-template-columns: 1rem 1fr;
+                grid-template-rows: auto auto;
+                align-items: center;
+                padding: 1rem 2rem;
+            }
+            
+            .btn-delete {
+                position: absolute;
+                top: 0.2rem;
+                right: 0.2rem;
+                height: 1rem;
+                width: 1rem;
+                aspect-ratio: 1;
+                border-radius: 50%;
+                border: none;
+                background-color: #fa5252;
+                color: #e03131;
+                font-size: 0.9rem;
+                font-weight: bold;
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+            
+            .btn-delete:hover {
+                background-color: var(--color-red-dark);
+            }
+            
+            .custom-input {
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                font-size: 16px;
+                color: #333;
+                outline: none;
+            }
+            
+            .gray::placeholder {
+                color: #ccc
+            }
+            
+            .green::placeholder {
+                color: rgb(0, 255, 0)
+            }
+            
+            .red::placeholder {
+                color: #e03131;
+            }
+        </style>
+    </div>
+    <table style="direction:rtl" class="container">
+        <thead>
+            <tr>
+                <th>
+                    <h1>#</h1>
+                </th>
+                <th>
+                    <h1>برند</h1>
+                </th>
+                <th>
+                    <h1>مدل</h1>
+                </th>
+                <th>
+                    <h1>رم</h1>
+                </th>
+                <th>
+                    <h1>حافظه داخلی</h1>
+                </th>
+                <th>
+                    <h1>پردازنده</h1>
+                </th>
+
+                <th>
+                    <h1>سایز صفحه</h1>
+                </th>
+                <th>
+                    <h1>قیمت</h1>
+                </th>
+                <th>
+                    <h1>اختلاف قیمت</h1>
+                </th>
+                <th>
+                    <h1>تغییرات ۲۴ ساعت</h1>
+                </th>
+                <th>
+                    <h1>سایت</h1>
+                </th>
+                <th>
+                    <h1>فروشنده</h1>
+                </th>
+                <th>
+                    <h1>رنگ</h1>
+                </th>
+                <th>
+                    <h1>ID</h1>
+                </th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script src='{% static "/js/extention/choices.js" %}'></script>
+    <script>
+        'use strict';
+        const customSelects = document.querySelectorAll("select");
+        const deleteBtn = document.getElementById("delete");
+        const choices = new Choices("select", {
+            searchEnabled: false,
+            removeItemButton: true,
+            itemSelectText: "",
+        });
+
+        for (let i = 0; i < customSelects.length; i++) {
+            customSelects[i].addEventListener(
+                "addItem",
+                function(event) {
+                    if (event.detail.value) {
+                        let parent = this.parentNode.parentNode;
+                        parent.classList.add("valid");
+                        parent.classList.remove("invalid");
+                    } else {
+                        let parent = this.parentNode.parentNode;
+                        parent.classList.add("invalid");
+                        parent.classList.remove("valid");
+                    }
+                },
+                false
+            );
+        }
+
+
+        // تابع برای پاکسازی مدل لپ‌تاپ
+        function cleanModelName(title) {
+            return title
+                .replace(/\b\d{1,2}GB\b/gi, "") // حذف رم (مثلا 8GB, 16GB)
+                .replace(/\b\d{2,4}GB\b/gi, "") // حذف حافظه (128GB, 512GB)
+                .replace(/\bSSD\b/gi, "") // حذف SSD
+                .replace(/\bHDD\b/gi, "") // حذف HDD
+                .replace(/\bRAM\b/gi, "") // حذف RAM
+                .replace(/\bIntel.*?\b/gi, "") // حذف CPU های Intel
+                .replace(/\bAMD.*?\b/gi, "") // حذف CPU های AMD
+                .replace(/\bUHD.*?\b/gi, "") // حذف UHD
+                .replace(/\s+/g, " ") // فاصله‌های اضافی
+                .trim();
+        }
+
+
+        const create_td = function(i, obj, option) {
+
+                const date = new Date(obj.updated_at);
+                const now = new Date()
+                const timeDiff = (now - date) / (1000 * 60)
+
+                const fourHourInMiniute = (60 * 4) + 1
+
+                // localize price_change_time
+                const price_change_time = obj.price_change_time;
+                const custom_id = obj.custom_id || ""
+                let ChangeDate = null;
+                let localChangeTime = null;
+                if (Boolean(price_change_time)) {
+                    ChangeDate = new Date(price_change_time);
+                    localChangeTime = new Intl.DateTimeFormat("fa", option).format(
+                        ChangeDate
+                    )
+                };
+
+                const localTime = new Intl.DateTimeFormat("fa", option).format(
+                    date
+                );
+
+
+                const min_price = obj.min_price / 10;
+                const old_min_price = obj.old_min_price;
+                let price_diff = "-";
+                if (old_min_price) {
+                    price_diff = min_price - old_min_price / 10;
+                    console.log('price_diff', price_diff)
+                    console.log('min_price', min_price)
+                    console.log('old_min_price', old_min_price)
+                    console.log("##############################################################")
+                }
+
+                let toLocalNumber = "0";
+                if (price_diff != "-") {
+                    const option = {
+                        style: "currency",
+                    };
+                    toLocalNumber = new Intl.NumberFormat("fa-IR").format(
+                        Math.abs(price_diff)
+                    );
+                }
+                const toLocalMinPrice = new Intl.NumberFormat("fa-IR").format(min_price);
+
+
+                // برای نمایش tooltip حرفه‌ای، می‌توانید این JS اضافه کنید:
+                document.querySelectorAll('.price-tooltip-container').forEach(container => {
+                    const tooltip = container.querySelector('.price-tooltip');
+                    container.addEventListener('mouseenter', () => tooltip.style.display = 'block');
+                    container.addEventListener('mouseleave', () => tooltip.style.display = 'none');
+                });
+
+
+
+                const html = `<tr class=${!obj.status ? "dont_Exist" : ""}>
+              <td id="td-counter" data-id=${obj.id}>${i + 1}</td>
+              <td>${obj.brand__name_fa}</td>
+              <td class="price_diff" id="model-title" data-title="${obj.title}" style="font-size:12px;">
+                  <a href=${obj.url} target="_blank"> 
+                    <div style="height:100%;width:100%;">${cleanModelName(obj.model)} <span>${obj.title}</span></div>
+                  </a>
+              </td>
+              <td>${obj.ram || "-"}</td>
+              <td>${obj.storage || "-"}</td>
+              <td class="price_diff" id="model-title" data-title="${obj.gpu || "-"}" style="font-size:12px;">
+                    <div style="height:100%;width:100%;">${obj.cpu || "-"} <span>کارت گرافیک: ${obj.gpu || "-"}</span></div>
+              </td>
+              <td>${obj.display_size || "-"}</td>
+              <td class="price_diff" style="font-size">${toLocalMinPrice + " ت"}
+                <span>تاریخ بروزرسانی ${localTime}</span>
+              </td>
+              <td class="price_diff" style="color:${price_diff > 0 ? "green" : "red"};">
+                ${price_diff && price_diff !== "-" ? toLocalNumber + " ت" : price_diff}
+                <span>${localChangeTime ? ` آخرین تغییر قیمت در ${localChangeTime} بوده` : 'تغییر قیمت نداشته.'} </span>
+              </td>
+              
+              <td class="price_changes_24h" style="
+                color:${obj.price_changes_24h && obj.price_changes_24h.length ? 
+                    (() => {
+                        const total = obj.price_changes_24h
+                            .map(c => (Number(c.change) || 0) / 10)   // ✅ ریال → تومان
+                            .reduce((sum, val) => sum + val, 0);
+                        return total > 0 ? '#00ff6c' : total < 0 ? '#e74c3c' : '#888';
+                    })() 
+                    : '#888'};
+                position:relative; text-align:center;
+            ">
+            <div class="price-tooltip-container">
+                ${obj.price_changes_24h && obj.price_changes_24h.length ? (() => {
+                    const total = obj.price_changes_24h
+                        .map(c => (Number(c.change) || 0) / 10)   // ✅ ریال → تومان
+                        .reduce((sum, val) => sum + val, 0);
+                    const icon = total > 0 
+                        ? '<i class="fas fa-arrow-up"></i>' 
+                        : total < 0 
+                        ? '<i class="fas fa-arrow-down"></i>' 
+                        : '';
+                    return `${icon} ${new Intl.NumberFormat("fa-IR").format(Math.abs(total))} ت`;
+                })() : "بدون تغییر"}
+      
+                <div class="price-tooltip">
+                    ${obj.price_changes_24h && obj.price_changes_24h.length ? (() => {
+                        const total = obj.price_changes_24h
+                            .map(c => (Number(c.change) || 0) / 10)   // ✅ ریال → تومان
+                            .reduce((sum, val) => sum + val, 0);
+                        const cls = total > 0 ? 'green-text' : total < 0 ? 'red-text' : '';
+                        const icon = total > 0 
+                            ? '<i class="fas fa-arrow-up"></i>' 
+                            : total < 0 
+                            ? '<i class="fas fa-arrow-down"></i>' 
+                            : '';
+                        return `<div class="tooltip-header">
+                            <i class="fas fa-chart-line"></i> جمع تغییرات: 
+                            <span class="${cls}" style="margin-right: 10px;">${icon} ${new Intl.NumberFormat("fa-IR").format(Math.abs(total))} تومان</span>
+                        </div>`;
+                    })() : ''}
+      
+                    <ul>
+                        ${obj.price_changes_24h && obj.price_changes_24h.length ? obj.price_changes_24h.map(c => {
+                            const changeValue = (Number(c.change) || 0) / 10;   // ✅ ریال → تومان
+                            const formattedVal = new Intl.NumberFormat("fa-IR").format(Math.abs(changeValue));
+                            const changeDate = new Date(c.time);
+                            const formatted = new Intl.DateTimeFormat("fa-IR", { 
+                                hour:"2-digit", 
+                                minute:"2-digit", 
+                                day:"numeric", 
+                                month:"long" 
+                            }).format(changeDate);
+                            const cls = changeValue > 0 ? 'green-text' : changeValue < 0 ? 'red-text' : '';
+                            const icon = changeValue > 0 
+                                ? '<i class="fas fa-arrow-up"></i>' 
+                                : changeValue < 0 
+                                ? '<i class="fas fa-arrow-down"></i>' 
+                                : '';
+                            return `
+                                <li>
+                                    <span class="${cls}">${icon} ${formattedVal} تومان</span>
+                                    <span class="tooltip-date"><i class="far fa-clock"></i> ${formatted}</span>
+                                </li>`;
+                        }).join('') : '<li><span style="color:#888;">تغییری ثبت نشده</span></li>'}
+                    </ul>
+                </div>
+            </div>
+          </td>
+      
+              <td id="site" data-site="${obj.site}" style="font-size:14px; padding:0;">${obj.site}</td>
+              <td id="seller-guarantee" data-seller="${obj.seller}" data-guarantee="${obj.guarantee}" class="price_diff" style="font-size:14px;">
+                ${obj.seller}<span>${obj.guarantee || 'گارانتی ذخیره نشده'}</span>
+              </td>
+              <td>
+                <div id="color-name" data-color-name="${obj.color_name}" style="width: 50%;
+                    float: right;font-size:13px;">${obj.color_name || "-"}</div>
+                <div id="color-hex" data-color-name="${obj.color_hex}" style="background:${obj.color_hex};
+                    width: 20px;
+                    height: 20px;
+                    border-radius: 50%;
+                    margin-top: 4px;
+                    margin-left: 9%;
+                    float: left;"></div>
+              </td>
+              <td style="max-width:60px;">
+                <input onfocus="onFocusFunc(this)" 
+                       onfocusout="register_id(this, '${custom_id}')" 
+                       class="custom-input gray" 
+                       value="${custom_id}" 
+                       placeholder="ثبت آیدی"/>
+              </td>
+            </tr>`;
+      
+          return html
+      }
+      
+
+    let currentRequest = null;
+    const debounce = (callback, wait) => {
+      let timeoutId = null;
+      return (...args) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          //callback.apply(this, args);
+          callback(...args);
+        }, wait);
+      };
+    }
+
+    $(document).on('click', '.webiart-toggle-btn', function () {
+      var status = $(this).attr('data-show');
+    
+      // همه‌ی سکشن‌ها
+      var sections = [
+        '.webiart-mobile-logs',
+        '.webiart-tablet-logs',
+        '.webiart-laptop-logs',
+        '.webiart-watchs-logs',
+        '.webiart-handsfree-logs',
+        '.webiart-powerbank-logs',
+        '.webiart-charger-logs',
+        '.webiart-speaker-logs',
+        '.webiart-accessories-logs'
+      ];
+    
+      if (status === 'show') {
+        $('.webiart-arrow-up,' + sections.join(',')).addClass('d-none', 1000);
+        $('.webiart-arrow-down').removeClass('d-none');
+        $(this).attr('data-show', 'hide');
+      } else {
+        $('.webiart-arrow-up,' + sections.join(',')).removeClass('d-none', 1000);
+        $('.webiart-arrow-down').addClass('d-none');
+        $(this).attr('data-show', 'show');
+      }
+    });
+    
+
+
+    function sendRequest() {
+      if (currentRequest) {
+        currentRequest.abort();
+      }
+    
+      var model   = $("#search").val();
+      var brand   = $("#brandInput").val();
+      var ram     = $("#ramInput").val();
+      var memory  = $("#memoryInput").val();
+      var cpu     = $("#cpuInput").val();
+      var gpu     = $("#gpuInput").val();
+      var display = $("#displayInput").val();
+      var site    = $("#siteInput").val();
+    
+      if (model || brand || ram || memory || cpu || gpu || display || site) {
+        currentRequest = $.ajax({
+          url: '/ajax_search_laptop/',   // 🚀 دیگه دستی پارامترها رو نمی‌چسبونیم
+          method: "GET",
+          data: {
+            type: 'laptop',
+            model: model,
+            brand: brand,
+            ram: ram,
+            memory: memory,
+            cpu: cpu,
+            gpu: gpu,
+            display: display,
+            site: site,
+          },
+          success: function (response) {
+            const option = { hour:"numeric", minute:"numeric", day:"numeric", month:"numeric", year:"numeric" };
+            $("tbody").children().remove();
+            for (const [i, obj] of response.entries()) {
+              $("tbody").append(create_td(i, obj, option));
+            }
+            document.querySelector("#result").innerHTML = $("tbody").children().length;
+          },
+          error: function (xhr, status, error) {
+            if (status !== "abort") {
+              console.error(xhr.responseText);
+            }
+          },
+        });
+      } else {
+        $("tbody").children().remove();
+        document.querySelector("#result").innerHTML = 0;
+      }
+    }
+    
+    const handleSearchRequest = debounce(sendRequest, 600)
+    $("#search").on('keyup', handleSearchRequest)
+
+    function site_name(site, status) {
+      name = '';
+      switch (site) {
+        case 'Darsoo':
+        case 'Darsoo-tablet':
+          name = "دارسو";
+          break;
+        case 'Tellstar':
+        case 'Tellstar-tablet':
+          name = "تل استار";
+          break;
+        case 'Diarhamrah':
+        case 'Diarhamrah-tablet':
+            name = "دیار همراه";
+            break;
+        case 'Mobomin':
+        case 'Mobomin-tablet':
+            name = "موبومین";
+            break;
+        case 'Taavrizh':
+        case 'Taavrizh-tablet':
+          name = "تاوریژ";
+          break;
+          case 'Hamrahtel':
+          case 'Hamrahtel-tablet':
+          name = "همراه تل";
+          break;
+          case 'Kasrapars':
+          case 'Kasrapars-tablet':
+          name = "کسری پارس";
+          break;
+          case 'Mobile140':
+          case 'Mobile140-tablet':
+          name = "موبایل 140";
+          break;
+          case 'Digikala':
+          case 'Digikala-tablet':
+          name = "دیجی کالا";
+          break;
+          case 'Tecnolife':
+          case 'Tecnolife-tablet':
+          name = "تکنو لایف";
+          break;
+          case 'Saymandigital':
+          case 'Saymandigital-tablet':
+          name = "سایمان دیجیتال";
+          break;
+          case 'Etminantel':
+          case 'Etminantel-tablet':
+          name = "اطمینان تل";
+          break;
+        default:
+          name="نامشخص";
+      }
+      return name;
+                  
+    }
+
+    
+    function get_site_status() {
+      $.ajax({
+        url: '/site_status',
+        method: "GET",
+        data: {},
+        success: function (response) {
+          const option = {
+            hour: "2-digit",
+            minute: "2-digit",
+            day: "numeric",
+            month: "long",
+          };
+    
+          // تابع کمکی برای رندر هر دسته
+          function renderCategory(data, selector, isAccessories=false) {
+            let html = '';
+            for (const obj of data) {
+              const date = new Date(obj.last_executed);
+              const now = new Date();
+              const timeDiff = (now - date) / (1000 * 60);
+              const localTime = new Intl.DateTimeFormat("fa", option).format(date);
+    
+                            let color = '#999';
+              switch (obj.status_text) {
+                case "SUCCESS":
+                  color = "#00a92a"; // سبز
+                  break;
+                case "WARNING":
+                  color = "#fbff2b"; // زرد
+                  break;
+                case "FAILING":
+                  color = "#d80000"; // قرمز
+                  break;
+                case "PENDING":
+                default:
+                  color = "#999"; // خاکستری
+              }
+    
+              html += `
+                <div class="webiart-site-item">
+                  <div class="d-flex">
+                    <div class="webiart-site-status">
+                      <svg viewBox="0 0 31.955 31.955">
+                        <circle style="fill:${color}" cx="15.979" cy="15.977" r="6.117"/>
+                      </svg>
+                    </div>
+                    <div class="webiart-site-title">
+                      ${site_name(obj.name, obj.status)}
+                    </div>
+                  </div>
+                  <div class="webiart-site-date">${localTime}</div>
+                </div>`;
+            }
+            $(selector).children('.webiart-site-list').html(html);
+          }
+    
+          // موبایل
+          renderCategory(response.mobile, ".webiart-mobile-logs");
+          // تبلت
+          renderCategory(response.tablet, ".webiart-tablet-logs");
+          // لپ‌تاپ
+          renderCategory(response.laptop, ".webiart-laptop-logs");
+    
+          // لوازم جانبی
+          renderCategory(response.watchs, ".webiart-watchs-logs", true);
+          renderCategory(response.handsfree, ".webiart-handsfree-logs", true);
+          renderCategory(response.powerbank, ".webiart-powerbank-logs", true);
+          renderCategory(response.charger, ".webiart-charger-logs", true);
+          renderCategory(response.speaker, ".webiart-speaker-logs", true);
+        },
+        error: function (xhr, status, error) {
+          console.error(xhr.responseText);
+        },
+      });
+    }
+    
+    get_site_status();
+    setInterval(function(){
+      get_site_status()
+  }, 60000)
+
+  function sendRequest_select() {
+    var model   = $("#search").val();
+    var brand   = $("#brandInput").val();
+    var ram     = $("#ramInput").val();
+    var memory  = $("#memoryInput").val();
+    var cpu     = $("#cpuInput").val();
+    var gpu     = $("#gpuInput").val();
+    var display = $("#displayInput").val();
+    var site    = $("#siteInput").val();
+  
+    $.ajax({
+      url: '/ajax_search_laptop/',  // 🚀 ساده
+      method: "GET",
+      data: {
+        type: 'laptop',
+        model: model,
+        brand: brand,
+        ram: ram,
+        memory: memory,
+        cpu: cpu,
+        gpu: gpu,
+        display: display,
+        site: site,
+      },
+      success: function (response) {
+        const option = { hour:"numeric", minute:"numeric", day:"numeric", month:"numeric", year:"numeric" };
+        $("tbody").children().remove();
+        for (const [i, obj] of response.entries()) {
+          $("tbody").append(create_td(i, obj, option));
+        }
+        document.querySelector("#result").innerHTML = $("tbody").children().length;
+      },
+      error: function (xhr, status, error) {
+        console.error(xhr.responseText);
+      },
+    });
+  }
+  
+    // async function fetchForSetCustomId(title, memory, ram, color_name, site, seller, guarantee,customId, input) {
+      function containsOnlyDigits(str) {
+  return /^\d+$/.test(str);
+}
+
+async function fetchForSetCustomId(id, customId, input) {
+  try {
+    input.placeholder = "..."
+
+    const res = await fetch(`/set_custom_laptop_id/?id=${id}&custom_id=${customId}`, {
+      method: "GET"
+    });
+
+    if (!res.ok) {
+      throw new Error("مشکل کانکشن");
+    }
+
+    const data = await res.json();
+
+    if (data.Response === "Faild") {
+      throw new Error(data.reason);
+    }
+
+    if (data.Response === "success") {
+      input.value = customId
+      input.placeholder = ""
+      input.style.borderWidth = "2px"
+      input.style.borderColor = "rgb(0,150,0)"
+      input.classList.remove('gray', 'red')
+      input.classList.add("green")
+      input.style.color = "rgb(0,150,0)"
+      return true
+    }
+
+  } catch (error) {
+    showInputError(input, error.message)
+    return false
+  }
+}
+
+function showInputError(element, errorMessage) {
+  element.value = ""
+  element.placeholder = errorMessage;
+  element.classList.remove('gray', 'green')
+  element.classList.add("red")
+  element.style.borderColor = "red"
+  element.style.borderWidth = "2px"
+}
+
+function toEnglishDigits(str) {
+  // Persian digits
+  var e = "۰".charCodeAt(0);
+  str = str.replace(/[۰-۹]/g, t => t.charCodeAt(0) - e);
+
+  // Arabic digits
+  e = "٠".charCodeAt(0);
+  str = str.replace(/[٠-٩]/g, t => t.charCodeAt(0) - e);
+
+  return str;
+}
+
+async function register_id(input, custom_id) {
+  const inputValue = toEnglishDigits(input.value);
+
+  // اگر خالیه یا تغییری نکرده
+  if (!inputValue || inputValue === custom_id) return;
+
+  // اگر فقط عدد نیست
+  if (!containsOnlyDigits(inputValue)) {
+    showInputError(input, "فقط عدد")
+    return;
+  }
+
+  // گرفتن ID رکورد از تگ <tr>
+  const parentTR = input.closest('tr');
+  const modelId = parentTR.querySelector('#td-counter').dataset.id;
+
+  // فرستادن درخواست
+  await fetchForSetCustomId(modelId, inputValue, input);
+}
+
+function onFocusFunc(input) {
+  input.classList.remove('green', 'red')
+  input.classList.add('gray')
+  input.style.borderColor = "rgb(0,0,0)"
+  input.style.borderWidth = "1px"
+  input.style.color = "rgb(0,0,0)"
+}
+    </script>
+</body>
+
+</html>
